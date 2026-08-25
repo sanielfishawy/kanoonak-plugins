@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "kanoonak": {
+      "type": "http",
+      "url": "https://kanoonak-mcp.com/mcp",
+      "oauth_resource": "https://kanoonak-mcp.com/mcp"
+    }
+  }
+}

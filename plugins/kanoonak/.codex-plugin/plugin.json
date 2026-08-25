@@ -1,0 +1,22 @@
+{
+  "name": "kanoonak",
+  "version": "0.1.0",
+  "description": "Authenticated Kanoonak workflows for Egyptian labor-law case preparation and judicial drafting.",
+  "author": {
+    "name": "Kanoonak"
+  },
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Kanoonak",
+    "shortDescription": "Prepare cases and labor rulings with Kanoonak.",
+    "longDescription": "Kanoonak adds authenticated case-preparation and labor-appellate drafting workflows backed by your private Kanoonak account.",
+    "developerName": "Kanoonak",
+    "category": "Productivity",
+    "capabilities": [],
+    "websiteURL": "https://kanoonak.com",
+    "defaultPrompt": [
+      "Open my Kanoonak case and prepare it for legal work."
+    ]
+  }
+}
