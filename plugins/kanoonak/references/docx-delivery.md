@@ -1,29 +1,23 @@
 # DOCX delivery reference
 
 The ruling skill's clean artifact is a judge-editable Word draft. The MCP
-connector does not write files. The host grants one exact, already existing
-delivery directory and labels it:
+connector does not write files. Publication is available only after the shared
+workspace entry gate reports `ready`. The publisher uses the host-provided
+current workspace root and accepts only one canonical case-folder leaf. It
+revalidates the workspace marker and canonical root files, requires the case's
+complete existing ten-item structure, and derives the destination as that
+case's exact existing `المسودات/` directory.
 
-- `drafts` — the selected case's existing `المسودات/` directory;
-- `library-download` — the host's existing Library/download fallback.
-
-The host also classifies the grant `local-unsynchronized`. The helper never
-searches for, chooses, or creates a directory. If the exact grant or trusted
-classification is unavailable, stop truthfully. This version supports the
-existing Unix/macOS filesystem path and local NTFS Windows only. It refuses
-synchronized/cloud placeholders, SMB, FAT/exFAT, and reparse-backed grants.
-`storage-synchronization-classification` is instruction-led, not mechanically
-proved by the ruling checks.
-
-For a `library-download` delivery, the local pair is complete but case-folder
-placement remains `shared-folder placement: PENDING` until the user confirms
-both exact files were saved into the intended case's existing `المسودات/`
-directory. Treat that confirmation as the exact save check; never describe a
-download-only or DOCX-only save as shared-folder placement.
+The helper accepts no workspace or delivery-root path, never searches outside
+the validated workspace, and never selects or creates a case or drafts
+directory. If the exact boundary is absent, malformed, symlinked, replaced, or
+no longer on accepted storage, stop truthfully. Storage synchronization remains
+subject to the workspace gate's honest limitation; ruling checks do not prove
+it independently.
 
 ```text
-قانونك/<case-folder>/المسودات/<next-name>.docx
-قانونك/<case-folder>/المسودات/<next-name>.metadata.yaml
+<validated-workspace>/<case-folder>/المسودات/<next-name>.docx
+<validated-workspace>/<case-folder>/المسودات/<next-name>.metadata.yaml
 ```
 
 ## Checked input
@@ -58,9 +52,7 @@ The host-side helper is
 `plugins/kanoonak/scripts/create_ruling_docx.py`. Its command boundary is:
 
 ```text
---delivery-dir <exact-existing-directory>
---grant-label drafts|library-download
---storage-classification local-unsynchronized
+--case-folder <one-canonical-existing-case-leaf>
 --kind حكم|حكم-تمهيدي|قرار
 --ruling-file <exact-UTF-8-text>
 --expected-ruling-sha256 <universal-check-digest>
@@ -83,10 +75,13 @@ structurally reopened in same-directory staging. Unix uses its descriptor-held
 private stage directory. Windows uses direct random `CREATE_NEW` stage leaves
 whose native handles deny write/delete sharing until publication and whose
 opened links are removed by handle disposition. Publication uses atomic
-no-replace hard links, sidecar first and DOCX last. A concurrent
-collision rolls back only a leaf whose stable identity proves this invocation
-created it, then retries the next number. An unprovable or crash orphan is
-preserved, visibly reported, and reserves its number.
+no-replace hard links, sidecar first and DOCX last. A collision on the first
+public link safely retries because this invocation published nothing. On Unix,
+once either public link exists, any later collision or failure preserves and
+reports every visible or uncertain final leaf: a pathname cannot be deleted
+conditionally on inode identity. Windows retains its native handle-disposition
+cleanup where the opened link identity is stable. Every preserved or crash
+orphan visibly reserves its number.
 
 The sidecar carries draft/state/case/kind metadata, the exact paired artifact
 name, `ruling_text_sha256` for the checked UTF-8 body, and `artifact_sha256` for
