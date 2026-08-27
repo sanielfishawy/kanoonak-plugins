@@ -5,13 +5,13 @@ description: Draft and check a labor-appellate judicial ruling in formal Egyptia
 
 # Draft a labor-appellate ruling
 
-**Skill version:** `2026-08-26.1`
+**Skill version:** `2026-08-27.1`
 
 Read [workflow-contract.md](../../references/workflow-contract.md) before
 drafting. It supplies the common readiness, local-folder, kind-routing, and
 checker-status contract. Read [docx-delivery.md](../../references/docx-delivery.md)
 before creating the artifact. The compatible workflow and specialized checker
-versions are `2026-08-26.1` and `2026-08-24.1`; stop on a mismatch. The
+versions are `2026-08-27.1` and `2026-08-24.1`; stop on a mismatch. The
 compatible directive remains the sole source of legal templates.
 
 ## Activation and judicial authority
