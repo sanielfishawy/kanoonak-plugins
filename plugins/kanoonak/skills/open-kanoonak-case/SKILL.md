@@ -5,7 +5,7 @@ description: Prepare an authenticated Kanoonak case for legal work with complete
 
 # Open a Kanoonak case
 
-**Skill version:** `2026-08-27.1`
+**Skill version:** `2026-08-27.2`
 
 Read [workflow-contract.md](../../references/workflow-contract.md) first. Use
 the existing authenticated, read-only MCP connection for case and page data.
