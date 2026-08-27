@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Publish one checked Kanoonak draft inside the current validated workspace.
+"""Publish one checked Kanoonak draft inside the current Kanoonak project folder.
 
 The CLI accepts one canonical case-folder leaf, never a workspace or delivery
 root. It derives the exact existing ``المسودات`` directory beneath the
@@ -10,108 +10,62 @@ issued-rulings folder, and never changes the checked text.
 from __future__ import annotations
 
 import argparse
-import ctypes
-import errno
 import hashlib
 import importlib.util
 import io
 import json
 import os
 import re
-import secrets
-import stat
 import sys
 import unicodedata
 import zipfile
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 from typing import Any, Callable
 
 
 ALLOWED_KINDS = {"حكم", "حكم-تمهيدي", "قرار"}
 ALLOWED_ROLES = {"title", "transition", "substantive", "plain"}
-DOCX_DRAFT_RE = re.compile(r"مسودة-(حكم-تمهيدي|حكم|قرار)-([0-9]{2})\.docx\Z")
-SIDECAR_DRAFT_RE = re.compile(
-    r"مسودة-(حكم-تمهيدي|حكم|قرار)-([0-9]{2})\.metadata\.yaml\Z"
-)
-CASE_FOLDER_RE = re.compile(
-    r"(?P<appeal>استئناف)-(?P<appeal_numbers>[1-9][0-9]*(?:-و-[1-9][0-9]*)*)"
-    r"-لسنة-(?P<appeal_year>[0-9]{2})ق"
-    r"(?:-و-[1-9][0-9]*(?:-و-[1-9][0-9]*)*-لسنة-[0-9]{2}ق)*\Z"
-    r"|(?P<petition>التماس)-(?P<petition_number>[1-9][0-9]*)"
-    r"-لسنة-(?P<petition_year>[0-9]{2})ق\Z"
-)
 DIGEST_RE = re.compile(r"[0-9a-f]{64}\Z")
-WINDOWS_MAX_PATH_UTF16 = 32767
-WINDOWS_MAX_COMPONENT_UTF16 = 255
-EXPECTED_UNIVERSAL_VERSION = "2026-08-24.1"
-
-
-class _WindowsFileInformation(ctypes.Structure):
-    from ctypes import wintypes as _wintypes
-
-    _fields_ = [
-        ("dwFileAttributes", _wintypes.DWORD),
-        ("ftCreationTime", _wintypes.FILETIME),
-        ("ftLastAccessTime", _wintypes.FILETIME),
-        ("ftLastWriteTime", _wintypes.FILETIME),
-        ("dwVolumeSerialNumber", _wintypes.DWORD),
-        ("nFileSizeHigh", _wintypes.DWORD),
-        ("nFileSizeLow", _wintypes.DWORD),
-        ("nNumberOfLinks", _wintypes.DWORD),
-        ("nFileIndexHigh", _wintypes.DWORD),
-        ("nFileIndexLow", _wintypes.DWORD),
-    ]
-
-
-class _WindowsFileDispositionInfo(ctypes.Structure):
-    from ctypes import wintypes as _wintypes
-
-    _fields_ = [("DeleteFile", _wintypes.BOOLEAN)]
+EXPECTED_UNIVERSAL_VERSION = "2026-08-26.1"
+LOCAL_PERSONA_ABSENT = "غير موجود"
 
 
 class DraftCreationError(ValueError):
     """A fail-closed input, formatting, or publication error."""
 
 
+class _ExclusiveWriteError(DraftCreationError):
+    """An exclusive leaf write failed after creation became possible."""
+
+    def __init__(self, message: str, *, path: Path):
+        super().__init__(message)
+        self.path = path
+
+
 @dataclass(frozen=True)
 class PublicationResult:
     docx: Path
     metadata: Path
-    docx_identity: tuple[int, int]
-    metadata_identity: tuple[int, int]
     ruling_text_sha256: str
     artifact_sha256: str
 
 
 @dataclass(frozen=True)
 class CaseDraftBoundary:
-    """One exact existing case drafts directory under one ready workspace."""
+    """One complete canonical case drafts directory under process CWD."""
 
-    workspace_root: Path
     case_folder: str
     case_directory: Path
     drafts_directory: Path
-    raw_case_name: str
-    raw_drafts_name: str
-    root_identity: tuple[int, int]
-    case_identity: tuple[int, int]
-    drafts_identity: tuple[int, int]
-    root_fd: int | None = None
-    case_fd: int | None = None
-    drafts_fd: int | None = None
-
-    def close(self) -> None:
-        for descriptor in (self.drafts_fd, self.case_fd, self.root_fd):
-            if descriptor is not None:
-                os.close(descriptor)
 
 
 def _load_workspace_module():
     """Load only the reviewed sibling workspace helper."""
 
     path = Path(__file__).with_name("manage_workspace.py")
-    module_name = "_kanoonak_manage_workspace_2026_08_25_1"
+    module_name = "_kanoonak_manage_workspace_2026_08_26_1"
     spec = importlib.util.spec_from_file_location(module_name, path)
     if spec is None or spec.loader is None:
         raise DraftCreationError("workspace helper is unavailable")
@@ -122,17 +76,23 @@ def _load_workspace_module():
     except Exception:
         sys.modules.pop(module_name, None)
         raise
-    if not all(
-        callable(getattr(module, name, None))
-        for name in (
-            "inspect_workspace",
-            "_open_root",
-            "_open_inherited_cwd",
-            "_reopen_held_directory",
-            "_root_path_names_identity",
-        )
+    for name, description in (
+        ("parse_case_leaf", "canonical case parser"),
+        ("_target_entries", "normalized entry lookup"),
+        ("_identity_from_mapping", "case identity parser"),
+        ("_existing_summary_identity", "existing summary identity parser"),
+        ("_project_identity", "case identity projection"),
+        ("load_strict_json", "strict JSON parser"),
     ):
-        raise DraftCreationError("workspace helper lacks required inspection API")
+        if not callable(getattr(module, name, None)):
+            raise DraftCreationError(f"workspace helper lacks {description}")
+    for name in (
+        "CANONICAL_CASE_FILES",
+        "CANONICAL_CASE_DIRECTORIES",
+        "DRAFTS_DIRECTORY",
+    ):
+        if not hasattr(module, name):
+            raise DraftCreationError(f"workspace helper lacks required constant {name}")
     return module
 
 
@@ -150,17 +110,17 @@ def _require_case_leaf(case_folder: str) -> None:
 
 
 def _case_key_from_folder(case_folder: str) -> tuple[str, int, int]:
-    match = CASE_FOLDER_RE.fullmatch(case_folder)
-    if match is None:
-        raise DraftCreationError("case folder does not match the canonical case grammar")
-    if match.group("appeal") is not None:
-        first_number = match.group("appeal_numbers").split("-و-", 1)[0]
-        return "استئناف", int(first_number), int(match.group("appeal_year"))
-    return (
-        "التماس",
-        int(match.group("petition_number")),
-        int(match.group("petition_year")),
-    )
+    _require_case_leaf(case_folder)
+    try:
+        case_type, members = _load_workspace_module().parse_case_leaf(case_folder)
+    except ValueError as exc:
+        raise DraftCreationError(
+            "case folder does not match the canonical case grammar"
+        ) from exc
+    if not members:
+        raise DraftCreationError("canonical case folder has no case member")
+    number, judicial_year = members[0]
+    return case_type, number, judicial_year
 
 
 def _require_metadata_case(metadata: dict[str, Any], case_folder: str) -> None:
@@ -178,197 +138,73 @@ def _require_metadata_case(metadata: dict[str, Any], case_folder: str) -> None:
         raise DraftCreationError("metadata case tuple does not match the selected case folder")
 
 
-def _normalized_entry_map(directory: Path | int) -> dict[str, str]:
-    entries: dict[str, str] = {}
-    for raw_name in os.listdir(directory):
-        normalized = unicodedata.normalize("NFC", raw_name)
-        if normalized in entries and entries[normalized] != raw_name:
-            raise DraftCreationError("case boundary contains a normalization collision")
-        entries[normalized] = raw_name
-    return entries
-
-
-def _require_regular_leaf(parent_fd: int, raw_name: str, name: str) -> None:
-    try:
-        value = os.stat(raw_name, dir_fd=parent_fd, follow_symlinks=False)
-    except OSError as exc:
-        raise DraftCreationError(f"validated case is missing required file {name}") from exc
-    if not stat.S_ISREG(value.st_mode) or stat.S_ISLNK(value.st_mode):
-        raise DraftCreationError(f"validated case file is not one exact regular file: {name}")
-
-
-def _open_real_directory_leaf(
-    parent_fd: int, raw_name: str, name: str
-) -> tuple[int, tuple[int, int]]:
-    try:
-        value = os.stat(raw_name, dir_fd=parent_fd, follow_symlinks=False)
-    except OSError as exc:
-        raise DraftCreationError(f"validated case is missing required directory {name}") from exc
-    if not stat.S_ISDIR(value.st_mode) or stat.S_ISLNK(value.st_mode):
-        raise DraftCreationError(f"validated case directory is not one exact real directory: {name}")
-    flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_NOFOLLOW", 0)
-    try:
-        descriptor = os.open(raw_name, flags, dir_fd=parent_fd)
-    except OSError as exc:
-        raise DraftCreationError(
-            f"validated case directory could not be held exactly: {name}"
-        ) from exc
-    opened = os.fstat(descriptor)
-    expected_identity = (value.st_dev, value.st_ino)
-    if not stat.S_ISDIR(opened.st_mode) or (opened.st_dev, opened.st_ino) != expected_identity:
-        os.close(descriptor)
-        raise DraftCreationError(f"validated case directory changed while opening: {name}")
-    return descriptor, expected_identity
-
-
-def _require_real_directory_leaf(parent_fd: int, raw_name: str, name: str) -> tuple[int, int]:
-    descriptor, identity = _open_real_directory_leaf(parent_fd, raw_name, name)
-    os.close(descriptor)
-    return identity
-
-
-def _assert_boundary_current(boundary: CaseDraftBoundary) -> None:
-    if boundary.root_fd is None or boundary.case_fd is None or boundary.drafts_fd is None:
-        return
-    workspace = _load_workspace_module()
-    try:
-        held = os.fstat(boundary.root_fd)
-        if (
-            not stat.S_ISDIR(held.st_mode)
-            or (held.st_dev, held.st_ino) != boundary.root_identity
-            or not workspace._root_path_names_identity(
-                boundary.workspace_root, boundary.root_identity
-            )
-        ):
-            raise DraftCreationError("validated workspace root changed before publication")
-    except (OSError, ValueError) as exc:
-        raise DraftCreationError(
-            "validated workspace root changed before publication"
-        ) from exc
-
-    checks = (
-        (
-            boundary.root_fd,
-            boundary.raw_case_name,
-            boundary.case_fd,
-            boundary.case_identity,
-            "case",
-        ),
-        (
-            boundary.case_fd,
-            boundary.raw_drafts_name,
-            boundary.drafts_fd,
-            boundary.drafts_identity,
-            "drafts",
-        ),
-    )
-    for parent_fd, raw_name, held_fd, expected_identity, label in checks:
-        try:
-            linked = os.stat(raw_name, dir_fd=parent_fd, follow_symlinks=False)
-            held = os.fstat(held_fd)
-        except OSError as exc:
-            raise DraftCreationError(
-                f"validated {label} directory changed before publication"
-            ) from exc
-        linked_identity = (linked.st_dev, linked.st_ino)
-        held_identity = (held.st_dev, held.st_ino)
-        if (
-            not stat.S_ISDIR(linked.st_mode)
-            or not stat.S_ISDIR(held.st_mode)
-            or linked_identity != expected_identity
-            or held_identity != expected_identity
-        ):
-            raise DraftCreationError(
-                f"validated {label} directory changed before publication"
-            )
-
-
 def resolve_case_draft_boundary(
-    workspace_root: Path,
-    case_folder: str,
-    *,
-    storage_probe: Callable[[int], Any] | None = None,
-    workspace_fd: int | None = None,
+    case_folder: str, case_identity: dict[str, Any]
 ) -> CaseDraftBoundary:
-    """Resolve one case leaf only after the exact current root is ready."""
+    """Resolve one complete canonical case under the host-provided root."""
 
     _require_case_leaf(case_folder)
-    root = Path(os.path.abspath(os.fspath(workspace_root)))
+    root = Path.cwd()
     workspace = _load_workspace_module()
-    root_fd = case_fd = drafts_fd = -1
     try:
-        if workspace_fd is None:
-            root_fd, root_identity = workspace._open_root(root)
-        else:
-            root_fd, root_identity = workspace._reopen_held_directory(workspace_fd)
-        inspected = workspace.inspect_workspace(
-            root,
-            storage_probe=storage_probe,
-            _root_fd=root_fd,
+        workspace.parse_case_leaf(case_folder)
+        if not root.is_dir():
+            raise DraftCreationError("current workspace root is not a directory")
+        root_entries = workspace._target_entries(root, (case_folder,))
+        raw_case_folder = root_entries.get(case_folder)
+        if raw_case_folder is None:
+            raise DraftCreationError("selected canonical case folder does not exist")
+        case_directory = root / raw_case_folder
+        if not case_directory.is_dir():
+            raise DraftCreationError("selected canonical case folder is not a directory")
+        required_names = (
+            workspace.CANONICAL_CASE_FILES
+            + workspace.CANONICAL_CASE_DIRECTORIES
         )
-        if inspected.status != "ready" or inspected.root_identity is None:
-            raise DraftCreationError(f"workspace is not ready: {inspected.reason}")
-        if root_identity != inspected.root_identity:
-            raise DraftCreationError("workspace root changed after inspection")
-        entries = _normalized_entry_map(root_fd)
-        raw_case_name = entries.get(case_folder)
-        if raw_case_name is None:
-            raise DraftCreationError(
-                "selected case folder does not exist in the ready workspace"
-            )
-        case_fd, case_identity = _open_real_directory_leaf(
-            root_fd, raw_case_name, case_folder
-        )
-        case_entries = _normalized_entry_map(case_fd)
-
+        case_entries = workspace._target_entries(case_directory, required_names)
         for name in workspace.CANONICAL_CASE_FILES:
             raw_name = case_entries.get(name)
-            if raw_name is None:
+            if raw_name is None or not (case_directory / raw_name).is_file():
                 raise DraftCreationError(f"validated case is missing required file {name}")
-            _require_regular_leaf(case_fd, raw_name, name)
         for name in workspace.CANONICAL_CASE_DIRECTORIES:
             raw_name = case_entries.get(name)
-            if raw_name is None:
+            if raw_name is None or not (case_directory / raw_name).is_dir():
                 raise DraftCreationError(
                     f"validated case is missing required directory {name}"
                 )
-            if name == workspace.DRAFTS_DIRECTORY:
-                continue
-            _require_real_directory_leaf(case_fd, raw_name, name)
-        raw_drafts_name = case_entries[workspace.DRAFTS_DIRECTORY]
-        drafts_fd, drafts_identity = _open_real_directory_leaf(
-            case_fd, raw_drafts_name, workspace.DRAFTS_DIRECTORY
-        )
-        boundary = CaseDraftBoundary(
-            workspace_root=root,
+        try:
+            expected_identity = workspace._identity_from_mapping(
+                case_identity, minimal=True
+            )
+            existing_identity = workspace._existing_summary_identity(
+                case_directory / case_entries["الملخص.md"]
+            )
+        except (KeyError, TypeError, ValueError, OSError) as exc:
+            raise DraftCreationError("selected case identity is unreadable") from exc
+        if (
+            workspace._project_identity(expected_identity) != case_folder
+            or existing_identity != expected_identity
+        ):
+            raise DraftCreationError(
+                "selected case identity does not match the existing case summary"
+            )
+        raw_drafts = case_entries[workspace.DRAFTS_DIRECTORY]
+        return CaseDraftBoundary(
             case_folder=case_folder,
-            case_directory=root / raw_case_name,
-            drafts_directory=root / raw_case_name / raw_drafts_name,
-            raw_case_name=raw_case_name,
-            raw_drafts_name=raw_drafts_name,
-            root_identity=root_identity,
-            case_identity=case_identity,
-            drafts_identity=drafts_identity,
-            root_fd=root_fd,
-            case_fd=case_fd,
-            drafts_fd=drafts_fd,
+            case_directory=case_directory,
+            drafts_directory=case_directory / raw_drafts,
         )
-        _assert_boundary_current(boundary)
-        root_fd = case_fd = drafts_fd = -1
-        return boundary
     except ValueError as exc:
         raise DraftCreationError(str(exc)) from exc
-    finally:
-        for descriptor in (drafts_fd, case_fd, root_fd):
-            if descriptor >= 0:
-                os.close(descriptor)
+    except OSError as exc:
+        raise DraftCreationError("current workspace boundary is unavailable") from exc
 
 
 def _load_universal_module():
     """Load only the reviewed sibling checker, never an ambient module."""
     path = Path(__file__).with_name("check_ruling_universal.py")
     spec = importlib.util.spec_from_file_location(
-        "_kanoonak_check_ruling_universal_2026_08_24_1", path
+        "_kanoonak_check_ruling_universal_2026_08_26_1", path
     )
     if spec is None or spec.loader is None:
         raise DraftCreationError("universal ruling checker is unavailable")
@@ -389,53 +225,47 @@ def _universal_api() -> tuple[Callable[[str], dict[str, Any]], Callable[[str], l
     return module.check_ruling_text, module.parse_paragraphs
 
 
-def _identity(path: Path | str, *, dir_fd: int | None = None) -> tuple[int, int]:
-    stat = os.stat(path, dir_fd=dir_fd, follow_symlinks=False)
-    return stat.st_dev, stat.st_ino
+def _read_bytes(path: Path) -> bytes:
+    return path.read_bytes()
 
 
-def _relative_when_anchored(path: Path, dir_fd: int | None) -> Path | str:
-    return path.name if dir_fd is not None else path
+def _read_exact(path: Path, expected: bytes) -> None:
+    if _read_bytes(path) != expected:
+        raise DraftCreationError(f"published payload reread mismatch: {path.name}")
 
 
-def _read_bytes(path: Path | str, *, dir_fd: int | None = None) -> bytes:
-    if dir_fd is None:
-        return Path(path).read_bytes()
-    flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
-    fd = os.open(path, flags, dir_fd=dir_fd)
-    try:
-        chunks: list[bytes] = []
-        while chunk := os.read(fd, 1024 * 1024):
-            chunks.append(chunk)
-        return b"".join(chunks)
-    finally:
-        os.close(fd)
+def _write_complete_exclusive(path: Path, payload: bytes) -> None:
+    """Create one final leaf without overwrite; preserve created-or-uncertain output."""
 
-
-def _read_exact(path: Path | str, expected: bytes, *, dir_fd: int | None = None) -> None:
-    if _read_bytes(path, dir_fd=dir_fd) != expected:
-        raise DraftCreationError(f"staged payload reread mismatch: {Path(path).name}")
-
-
-def _write_complete_exclusive(
-    path: Path | str, payload: bytes, *, dir_fd: int | None = None
-) -> tuple[int, int]:
-    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600, dir_fd=dir_fd)
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_BINARY", 0)
+    fd = os.open(path, flags, 0o600)
     try:
         offset = 0
         while offset < len(payload):
             written = os.write(fd, payload[offset:])
             if written <= 0:
-                raise DraftCreationError("staged write was short")
+                raise OSError("exclusive final-leaf write was short")
             offset += written
         os.fsync(fd)
         if os.fstat(fd).st_size != len(payload):
-            raise DraftCreationError("staged write was short")
-        identity = (os.fstat(fd).st_dev, os.fstat(fd).st_ino)
-    finally:
+            raise OSError("exclusive final-leaf write was short")
+    except Exception as exc:
+        try:
+            os.close(fd)
+        except OSError:
+            pass
+        raise _ExclusiveWriteError(
+            f"exclusive final-leaf write failed after creating or possibly creating {path.name}",
+            path=path,
+        ) from exc
+    try:
         os.close(fd)
-    _read_exact(path, payload, dir_fd=dir_fd)
-    return identity
+        _read_exact(path, payload)
+    except Exception as exc:
+        raise _ExclusiveWriteError(
+            f"exclusive final-leaf verification failed after creating or possibly creating {path.name}",
+            path=path,
+        ) from exc
 
 
 def _validate_formatting(
@@ -610,6 +440,18 @@ def _metadata_yaml(metadata: dict[str, Any], filename: str) -> bytes:
         raise DraftCreationError("DOCX helper creates drafts only")
     if metadata["kind"] not in ALLOWED_KINDS:
         raise DraftCreationError("metadata kind is unsupported")
+    persona_updated = metadata["local_persona_updated"]
+    if persona_updated != LOCAL_PERSONA_ABSENT:
+        if not isinstance(persona_updated, str):
+            raise DraftCreationError("metadata local_persona_updated is invalid")
+        try:
+            parsed_persona_date = date.fromisoformat(persona_updated)
+        except ValueError as exc:
+            raise DraftCreationError(
+                "metadata local_persona_updated is invalid"
+            ) from exc
+        if parsed_persona_date.isoformat() != persona_updated:
+            raise DraftCreationError("metadata local_persona_updated is invalid")
     if not isinstance(metadata["case"], dict) or not metadata["case"]:
         raise DraftCreationError("metadata case tuple is required")
     for field in ("artifact_sha256", "ruling_text_sha256"):
@@ -664,539 +506,21 @@ def _verify_metadata_payload(
         raise DraftCreationError("metadata sidecar digest or artifact binding mismatch")
 
 
-def _windows_extended(path: Path) -> str:
-    raw = str(path)
-    absolute = raw if raw.startswith("\\\\?\\") else str(path.absolute())
-    if absolute.startswith("\\\\?\\"):
-        extended = absolute
-    elif absolute.startswith("\\\\"):
-        extended = "\\\\?\\UNC\\" + absolute[2:]
-    else:
-        extended = "\\\\?\\" + absolute
-    if len(extended.encode("utf-16-le")) // 2 + 1 > WINDOWS_MAX_PATH_UTF16:
-        raise DraftCreationError(
-            "unsupported-path-length: مسار مجلد التسليم أطول من الحد الذي يدعمه هذا الناشر."
-        )
-    for component in Path(absolute).parts[1:]:
-        if len(component.encode("utf-16-le")) // 2 > WINDOWS_MAX_COMPONENT_UTF16:
-            raise DraftCreationError(
-                "unsupported-path-length: مسار مجلد التسليم أطول من الحد الذي يدعمه هذا الناشر."
-            )
-    return extended
-
-
-def _configure_kernel32(kernel32):
-    """Pin every Windows ABI used by the publisher before the first call."""
-    from ctypes import wintypes
-
-    signatures = {
-        "GetVolumePathNameW": (
-            [wintypes.LPCWSTR, wintypes.LPWSTR, wintypes.DWORD],
-            wintypes.BOOL,
-        ),
-        "GetVolumeInformationW": (
-            [
-                wintypes.LPCWSTR,
-                wintypes.LPWSTR,
-                wintypes.DWORD,
-                wintypes.LPDWORD,
-                wintypes.LPDWORD,
-                wintypes.LPDWORD,
-                wintypes.LPWSTR,
-                wintypes.DWORD,
-            ],
-            wintypes.BOOL,
-        ),
-        "GetDriveTypeW": ([wintypes.LPCWSTR], wintypes.UINT),
-        "GetFileAttributesW": ([wintypes.LPCWSTR], wintypes.DWORD),
-        "CreateFileW": (
-            [
-                wintypes.LPCWSTR,
-                wintypes.DWORD,
-                wintypes.DWORD,
-                wintypes.LPVOID,
-                wintypes.DWORD,
-                wintypes.DWORD,
-                wintypes.HANDLE,
-            ],
-            wintypes.HANDLE,
-        ),
-        "CreateHardLinkW": (
-            [wintypes.LPCWSTR, wintypes.LPCWSTR, wintypes.LPVOID],
-            wintypes.BOOL,
-        ),
-        "WriteFile": (
-            [wintypes.HANDLE, wintypes.LPCVOID, wintypes.DWORD, wintypes.LPDWORD, wintypes.LPVOID],
-            wintypes.BOOL,
-        ),
-        "ReadFile": (
-            [wintypes.HANDLE, wintypes.LPVOID, wintypes.DWORD, wintypes.LPDWORD, wintypes.LPVOID],
-            wintypes.BOOL,
-        ),
-        "FlushFileBuffers": ([wintypes.HANDLE], wintypes.BOOL),
-        "SetFilePointerEx": (
-            [wintypes.HANDLE, ctypes.c_longlong, ctypes.POINTER(ctypes.c_longlong), wintypes.DWORD],
-            wintypes.BOOL,
-        ),
-        "GetFileInformationByHandle": (
-            [wintypes.HANDLE, ctypes.POINTER(_WindowsFileInformation)],
-            wintypes.BOOL,
-        ),
-        "SetFileInformationByHandle": (
-            [wintypes.HANDLE, ctypes.c_int, wintypes.LPVOID, wintypes.DWORD],
-            wintypes.BOOL,
-        ),
-        "CreateSymbolicLinkW": (
-            [wintypes.LPCWSTR, wintypes.LPCWSTR, wintypes.DWORD],
-            wintypes.BOOLEAN,
-        ),
-        "CloseHandle": ([wintypes.HANDLE], wintypes.BOOL),
-    }
-    for name, (argtypes, restype) in signatures.items():
-        function = getattr(kernel32, name)
-        function.argtypes = argtypes
-        function.restype = restype
-    return kernel32
-
-
-def _kernel32():
-    return _configure_kernel32(ctypes.WinDLL("kernel32", use_last_error=True))
-
-
-@dataclass
-class _WindowsLeaf:
-    path: Path
-    handle: object
-    identity: tuple[int, int]
-
-
-def _windows_invalid_handle(handle: object) -> bool:
-    from ctypes import wintypes
-
-    return handle == wintypes.HANDLE(-1).value
-
-
-def _windows_handle_identity(kernel32, handle: object) -> tuple[int, int]:
-    info = _WindowsFileInformation()
-    if not kernel32.GetFileInformationByHandle(handle, ctypes.byref(info)):
-        raise OSError(ctypes.get_last_error(), "GetFileInformationByHandle failed")
-    file_index = (int(info.nFileIndexHigh) << 32) | int(info.nFileIndexLow)
-    return int(info.dwVolumeSerialNumber), file_index
-
-
-def _windows_handle_bytes(kernel32, handle: object) -> bytes:
-    from ctypes import wintypes
-
-    if not kernel32.SetFilePointerEx(handle, 0, None, 0):
-        raise OSError(ctypes.get_last_error(), "SetFilePointerEx failed")
-    chunks: list[bytes] = []
-    while True:
-        buffer = ctypes.create_string_buffer(1024 * 1024)
-        read = wintypes.DWORD()
-        if not kernel32.ReadFile(handle, buffer, len(buffer), ctypes.byref(read), None):
-            raise OSError(ctypes.get_last_error(), "ReadFile failed")
-        if read.value == 0:
-            return b"".join(chunks)
-        chunks.append(buffer.raw[: read.value])
-
-
-def _windows_write_handle(kernel32, handle: object, payload: bytes) -> None:
-    from ctypes import wintypes
-
-    offset = 0
-    while offset < len(payload):
-        chunk = payload[offset : offset + 1024 * 1024]
-        buffer = ctypes.create_string_buffer(chunk)
-        written = wintypes.DWORD()
-        if not kernel32.WriteFile(handle, buffer, len(chunk), ctypes.byref(written), None):
-            raise OSError(ctypes.get_last_error(), "WriteFile failed")
-        if written.value == 0:
-            raise DraftCreationError("Windows staged write was short")
-        offset += written.value
-    if not kernel32.FlushFileBuffers(handle):
-        raise OSError(ctypes.get_last_error(), "FlushFileBuffers failed")
-    if _windows_handle_bytes(kernel32, handle) != payload:
-        raise DraftCreationError("Windows staged payload reread mismatch")
-
-
-def _windows_set_disposition(kernel32, leaf: _WindowsLeaf) -> bool:
-    disposition = _WindowsFileDispositionInfo(True)
-    return bool(
-        kernel32.SetFileInformationByHandle(
-            leaf.handle,
-            4,  # FileDispositionInfo
-            ctypes.byref(disposition),
-            ctypes.sizeof(disposition),
-        )
+def _partial_publication_error(
+    *, preserved: tuple[Path, ...], blocker: Path | None = None
+) -> DraftCreationError:
+    message = (
+        "publication stopped; preserved created or possibly created item(s): "
+        + ", ".join(str(path) for path in preserved)
     )
-
-
-def _windows_close_leaf(kernel32, leaf: _WindowsLeaf, *, delete_link: bool) -> bool:
-    disposed = True
-    if delete_link:
-        disposed = _windows_set_disposition(kernel32, leaf)
-    closed = bool(kernel32.CloseHandle(leaf.handle))
-    leaf.handle = None
-    return disposed and closed
-
-
-def _windows_create_stage_leaf(
-    delivery_dir: Path, suffix: str, payload: bytes
-) -> _WindowsLeaf:
-    from ctypes import wintypes
-
-    kernel32 = _kernel32()
-    desired_access = 0x80000000 | 0x40000000 | 0x00010000  # READ | WRITE | DELETE
-    share_read_only = 0x00000001
-    create_new = 1
-    flags = 0x00000100 | 0x00200000 | 0x80000000  # TEMPORARY | OPEN_REPARSE | WRITE_THROUGH
-    for _ in range(16):
-        path = delivery_dir / f".kanoonak-stage-{secrets.token_hex(12)}{suffix}"
-        _windows_extended(path)
-        handle = kernel32.CreateFileW(
-            _windows_extended(path),
-            desired_access,
-            share_read_only,
-            None,
-            create_new,
-            flags,
-            None,
-        )
-        if _windows_invalid_handle(handle):
-            error = ctypes.get_last_error()
-            if error in {80, 183}:
-                continue
-            raise OSError(error, "CreateFileW CREATE_NEW stage leaf failed", path)
-        leaf = _WindowsLeaf(path, handle, _windows_handle_identity(kernel32, handle))
-        try:
-            attributes = kernel32.GetFileAttributesW(_windows_extended(path))
-            if attributes == 0xFFFFFFFF or attributes & 0x400:
-                raise DraftCreationError("Windows stage leaf is missing or reparse-backed")
-            _windows_write_handle(kernel32, handle, payload)
-            return leaf
-        except Exception:
-            _windows_close_leaf(kernel32, leaf, delete_link=True)
-            raise
-    raise DraftCreationError("could not allocate a native Windows stage leaf")
-
-
-def _windows_open_final_leaf(path: Path, *, deny_mutation: bool) -> _WindowsLeaf:
-    kernel32 = _kernel32()
-    desired_access = 0x80000000  # GENERIC_READ
-    share = 0x00000001 if deny_mutation else 0x00000001 | 0x00000002 | 0x00000004
-    handle = kernel32.CreateFileW(
-        _windows_extended(path),
-        desired_access,
-        share,
-        None,
-        3,  # OPEN_EXISTING
-        0x00200000,  # FILE_FLAG_OPEN_REPARSE_POINT
-        None,
-    )
-    if _windows_invalid_handle(handle):
-        raise OSError(ctypes.get_last_error(), "CreateFileW final leaf failed", path)
-    leaf = _WindowsLeaf(path, handle, _windows_handle_identity(kernel32, handle))
-    attributes = kernel32.GetFileAttributesW(_windows_extended(path))
-    if attributes == 0xFFFFFFFF or attributes & 0x400:
-        _windows_close_leaf(kernel32, leaf, delete_link=False)
-        raise DraftCreationError("Windows final leaf is missing or reparse-backed")
-    return leaf
-
-
-def _windows_remove_final_leaf(kernel32, anchor: _WindowsLeaf) -> bool:
-    """Delete only the currently opened link when its identity still matches."""
-    cleanup_access = 0x80000000 | 0x00010000  # READ | DELETE
-    share_all = 0x00000001 | 0x00000002 | 0x00000004
-    handle = kernel32.CreateFileW(
-        _windows_extended(anchor.path),
-        cleanup_access,
-        share_all,
-        None,
-        3,
-        0x00200000,
-        None,
-    )
-    if _windows_invalid_handle(handle):
-        return False
-    cleanup = _WindowsLeaf(
-        anchor.path, handle, _windows_handle_identity(kernel32, handle)
-    )
-    attributes = kernel32.GetFileAttributesW(_windows_extended(anchor.path))
-    if attributes == 0xFFFFFFFF or attributes & 0x400 or cleanup.identity != anchor.identity:
-        _windows_close_leaf(kernel32, cleanup, delete_link=False)
-        return False
-    return _windows_close_leaf(kernel32, cleanup, delete_link=True)
-
-
-def _windows_publish_pair(
-    *,
-    delivery_dir: Path,
-    target: Path,
-    sidecar: Path,
-    payload: bytes,
-    metadata_payload: bytes,
-    ruling_text: str,
-    ruling_digest: str,
-    artifact_digest: str,
-) -> tuple[tuple[int, int], tuple[int, int]] | None:
-    kernel32 = _kernel32()
-    staged_sidecar = _windows_create_stage_leaf(delivery_dir, ".metadata", metadata_payload)
-    staged_docx: _WindowsLeaf | None = None
-    final_sidecar: _WindowsLeaf | None = None
-    final_docx: _WindowsLeaf | None = None
-    locked_sidecar: _WindowsLeaf | None = None
-    locked_docx: _WindowsLeaf | None = None
-    success = False
-    try:
-        staged_docx = _windows_create_stage_leaf(delivery_dir, ".docx", payload)
-        _verify_metadata_payload(
-            _windows_handle_bytes(kernel32, staged_sidecar.handle),
-            filename=target.name,
-            ruling_digest=ruling_digest,
-            artifact_digest=artifact_digest,
-        )
-        _verify_docx_text(_windows_handle_bytes(kernel32, staged_docx.handle), ruling_text)
-        try:
-            _link_noreplace(staged_sidecar.path, sidecar)
-        except FileExistsError:
-            return None
-        final_sidecar = _windows_open_final_leaf(sidecar, deny_mutation=False)
-        if final_sidecar.identity != staged_sidecar.identity:
-            raise DraftCreationError("published Windows sidecar identity mismatch")
-        try:
-            _link_noreplace(staged_docx.path, target)
-        except FileExistsError:
-            return None
-        final_docx = _windows_open_final_leaf(target, deny_mutation=False)
-        if final_docx.identity != staged_docx.identity:
-            raise DraftCreationError("published Windows DOCX identity mismatch")
-
-        if not _windows_close_leaf(kernel32, staged_sidecar, delete_link=True):
-            raise DraftCreationError("could not remove native Windows sidecar stage link")
-        if not _windows_close_leaf(kernel32, staged_docx, delete_link=True):
-            raise DraftCreationError("could not remove native Windows DOCX stage link")
-        staged_docx = None
-
-        locked_sidecar = _windows_open_final_leaf(sidecar, deny_mutation=True)
-        locked_docx = _windows_open_final_leaf(target, deny_mutation=True)
-        if locked_sidecar.identity != final_sidecar.identity or locked_docx.identity != final_docx.identity:
-            raise DraftCreationError("published Windows leaf changed during stage cleanup")
-
-        final_metadata = _windows_handle_bytes(kernel32, locked_sidecar.handle)
-        final_payload = _windows_handle_bytes(kernel32, locked_docx.handle)
-        if hashlib.sha256(final_payload).hexdigest() != artifact_digest:
-            raise DraftCreationError("published Windows DOCX digest mismatch")
-        _verify_docx_text(final_payload, ruling_text)
-        _verify_metadata_payload(
-            final_metadata,
-            filename=target.name,
-            ruling_digest=ruling_digest,
-            artifact_digest=artifact_digest,
-        )
-        success = True
-        return locked_docx.identity, locked_sidecar.identity
-    finally:
-        # A stage handle names exactly the link this invocation created. A
-        # separately opened cleanup handle is identity-compared with the held
-        # final handle before disposition, so a replacement is never removed.
-        cleanup_failed: list[Path] = []
-        for leaf in (staged_docx, staged_sidecar):
-            if leaf is not None and leaf.handle is not None:
-                if not _windows_close_leaf(kernel32, leaf, delete_link=True):
-                    cleanup_failed.append(leaf.path)
-        for locked, opened in (
-            (locked_docx, final_docx),
-            (locked_sidecar, final_sidecar),
-        ):
-            if success:
-                for leaf in (locked, opened):
-                    if leaf is not None and leaf.handle is not None:
-                        _windows_close_leaf(kernel32, leaf, delete_link=False)
-                continue
-            # A mutation-denying verification handle cannot share the DELETE
-            # access needed by cleanup. Close it, retain the permissive handle
-            # as the stable identity anchor, then compare a new DELETE handle
-            # with that anchor before setting disposition.
-            if locked is not None and locked.handle is not None:
-                _windows_close_leaf(kernel32, locked, delete_link=False)
-            if opened is not None and opened.handle is not None:
-                if not _windows_remove_final_leaf(kernel32, opened):
-                    cleanup_failed.append(opened.path)
-                _windows_close_leaf(kernel32, opened, delete_link=False)
-            elif locked is not None:
-                cleanup_failed.append(locked.path)
-        if cleanup_failed and not success:
-            raise DraftCreationError(
-                "Windows publication failed; preserved unprovable orphan(s): "
-                + ", ".join(str(path) for path in cleanup_failed)
-            )
-
-
-def _windows_capability_probe(path: Path) -> object:
-    if os.name != "nt":
-        return None
-    from ctypes import wintypes
-
-    kernel32 = _kernel32()
-    extended = _windows_extended(path)
-    volume_path = ctypes.create_unicode_buffer(32768)
-    if not kernel32.GetVolumePathNameW(extended, volume_path, len(volume_path)):
-        raise DraftCreationError("Windows volume capability probe failed")
-    fs_name = ctypes.create_unicode_buffer(64)
-    if not kernel32.GetVolumeInformationW(
-        volume_path.value, None, 0, None, None, None, fs_name, len(fs_name)
-    ):
-        raise DraftCreationError("Windows volume capability probe failed")
-    if fs_name.value.upper() != "NTFS":
-        raise DraftCreationError("delivery requires a local NTFS filesystem")
-    if kernel32.GetDriveTypeW(volume_path.value) != 3:  # DRIVE_FIXED
-        raise DraftCreationError("delivery requires a fixed local NTFS filesystem")
-    file_attribute_reparse_point = 0x400
-    ancestors = (path, *path.parents)
-    for ancestor in ancestors:
-        attributes = kernel32.GetFileAttributesW(_windows_extended(ancestor))
-        if attributes == 0xFFFFFFFF:
-            raise DraftCreationError("Windows path capability probe failed")
-        if attributes & file_attribute_reparse_point:
-            raise DraftCreationError("reparse-backed delivery directories are unsupported")
-        if ancestor.parent == ancestor:
-            break
-    create_file = kernel32.CreateFileW
-    create_file.restype = wintypes.HANDLE
-    handles: list[object] = []
-    try:
-        for ancestor in ancestors:
-            handle = create_file(
-                _windows_extended(ancestor), 0, 0x00000001 | 0x00000002, None, 3,
-                0x02000000 | 0x00200000, None,
-            )
-            if handle == wintypes.HANDLE(-1).value:
-                raise DraftCreationError(
-                    "could not hold the Windows delivery ancestor identities"
-                )
-            handles.append(handle)
-    except Exception:
-        for handle in handles:
-            kernel32.CloseHandle(handle)
-        raise
-    return handles
-
-
-def _close_windows_handle(handle: object) -> None:
-    if os.name == "nt" and handle is not None:
-        kernel32 = _kernel32()
-        for item in handle if isinstance(handle, list) else [handle]:
-            kernel32.CloseHandle(item)
-
-
-def _link_noreplace(
-    source: Path,
-    target: Path,
-    *,
-    source_dir_fd: int | None = None,
-    target_dir_fd: int | None = None,
-) -> None:
-    if os.name != "nt":
-        os.link(
-            source if source_dir_fd is None else source.name,
-            target if target_dir_fd is None else target.name,
-            src_dir_fd=source_dir_fd,
-            dst_dir_fd=target_dir_fd,
-            follow_symlinks=False,
-        )
-        return
-    kernel32 = _kernel32()
-    if not kernel32.CreateHardLinkW(_windows_extended(target), _windows_extended(source), None):
-        error = ctypes.get_last_error()
-        if error in {80, 183}:
-            raise FileExistsError(error, "publication target already exists", target)
-        raise OSError(error, "CreateHardLinkW failed", target)
-
-
-def _sync_directory(path: Path, *, dir_fd: int | None = None) -> None:
-    if os.name == "nt":
-        return
-    if dir_fd is not None:
-        os.fsync(dir_fd)
-        return
-    flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_NOFOLLOW", 0)
-    fd = os.open(path, flags)
-    try:
-        os.fsync(fd)
-    finally:
-        os.close(fd)
-
-
-def _rollback_published_pair(
-    result: PublicationResult, *, drafts_fd: int
-) -> tuple[str, ...]:
-    """Preserve any visible final leaf; pathname deletion is not identity-safe."""
-
-    preserved: list[str] = []
-    for path in (result.docx, result.metadata):
-        try:
-            os.stat(path.name, dir_fd=drafts_fd, follow_symlinks=False)
-        except OSError as exc:
-            if exc.errno == errno.ENOENT:
-                continue
-        preserved.append(path.name)
-    return tuple(preserved)
-
-
-def _occupied_numbers(
-    delivery_dir: Path, kind: str, *, dir_fd: int | None = None
-) -> set[int]:
-    occupied: set[int] = set()
-    names = os.listdir(dir_fd) if dir_fd is not None else [child.name for child in delivery_dir.iterdir()]
-    for name in names:
-        match = DOCX_DRAFT_RE.fullmatch(name) or SIDECAR_DRAFT_RE.fullmatch(name)
-        if match and match.group(1) == kind:
-            occupied.add(int(match.group(2)))
-    return occupied
-
-
-def _private_stage(delivery_dir: Path, *, dir_fd: int | None = None) -> Path:
-    for _ in range(16):
-        name = f".kanoonak-docx-stage-{secrets.token_hex(8)}"
-        path = delivery_dir / name
-        try:
-            if dir_fd is None:
-                path.mkdir(mode=0o700)
-            else:
-                os.mkdir(name, mode=0o700, dir_fd=dir_fd)
-            return path
-        except FileExistsError:
-            continue
-    raise DraftCreationError("could not allocate a private DOCX staging directory")
-
-
-def _cleanup_stage(
-    stage: Path, *, stage_fd: int | None = None, delivery_fd: int | None = None
-) -> None:
-    if stage_fd is not None and delivery_fd is not None:
-        try:
-            for name in os.listdir(stage_fd):
-                os.unlink(name, dir_fd=stage_fd)
-            stage_identity = (os.fstat(stage_fd).st_dev, os.fstat(stage_fd).st_ino)
-            if _identity(stage.name, dir_fd=delivery_fd) == stage_identity:
-                os.rmdir(stage.name, dir_fd=delivery_fd)
-        except OSError:
-            pass
-        return
-    try:
-        for child in stage.iterdir():
-            child.unlink()
-        stage.rmdir()
-    except OSError:
-        pass
+    if blocker is not None:
+        message += f"; completion blocker: {blocker}"
+    return DraftCreationError(message)
 
 
 def _publish_to_drafts(
     *,
     delivery_dir: Path,
-    delivery_fd: int | None = None,
-    boundary_check: Callable[[], None] | None = None,
-    expected_directory_identity: tuple[int, int] | None = None,
     kind: str,
     ruling_text: str,
     expected_ruling_sha256: str,
@@ -1207,13 +531,16 @@ def _publish_to_drafts(
         raise DraftCreationError("kind must be حكم, حكم-تمهيدي, or قرار")
     if not isinstance(ruling_text, str):
         raise DraftCreationError("ruling_text must be a string")
-    if not isinstance(expected_ruling_sha256, str) or not DIGEST_RE.fullmatch(expected_ruling_sha256):
+    if (
+        not isinstance(expected_ruling_sha256, str)
+        or not DIGEST_RE.fullmatch(expected_ruling_sha256)
+    ):
         raise DraftCreationError("expected_ruling_sha256 is invalid")
     if not isinstance(formatting, dict) or not isinstance(metadata, dict):
         raise DraftCreationError("formatting and metadata must be objects")
     delivery_dir = Path(os.path.abspath(os.fspath(delivery_dir)))
-    if delivery_fd is None and (not delivery_dir.is_dir() or delivery_dir.is_symlink()):
-        raise DraftCreationError("publication directory must be one exact existing real directory")
+    if not delivery_dir.is_dir():
+        raise DraftCreationError("publication directory must be an existing directory")
 
     check_ruling_text, parse_paragraphs = _universal_api()
     checked = check_ruling_text(ruling_text)
@@ -1223,7 +550,9 @@ def _publish_to_drafts(
     if checked.get("ruling_sha256") != actual_ruling_sha256:
         raise DraftCreationError("universal checker returned an inconsistent ruling digest")
     if actual_ruling_sha256 != expected_ruling_sha256:
-        raise DraftCreationError("checked ruling digest does not match expected_ruling_sha256")
+        raise DraftCreationError(
+            "checked ruling digest does not match expected_ruling_sha256"
+        )
     paragraphs = parse_paragraphs(ruling_text)
     format_items = _validate_formatting(formatting, paragraphs)
     payload = _docx_bytes(paragraphs, format_items)
@@ -1231,324 +560,112 @@ def _publish_to_drafts(
     artifact_sha256 = hashlib.sha256(payload).hexdigest()
 
     metadata = dict(metadata)
+    if metadata.get("kind") != kind:
+        raise DraftCreationError("metadata kind does not match the requested draft kind")
     metadata["kind"] = kind
     metadata["ruling_text_sha256"] = actual_ruling_sha256
     metadata["artifact_sha256"] = artifact_sha256
 
-    unix_delivery_fd: int | None = None
-    windows_handle: object = None
-    caller_held_delivery = delivery_fd is not None
-    if os.name != "nt":
-        if os.open not in getattr(os, "supports_dir_fd", ()) or os.link not in getattr(os, "supports_dir_fd", ()):
-            raise DraftCreationError("host lacks descriptor-anchored publication primitives")
-        if delivery_fd is None:
-            flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_NOFOLLOW", 0)
-            unix_delivery_fd = os.open(delivery_dir, flags)
-        else:
-            unix_delivery_fd = os.dup(delivery_fd)
-        directory_stat = os.fstat(unix_delivery_fd)
-        if not stat.S_ISDIR(directory_stat.st_mode):
-            os.close(unix_delivery_fd)
-            raise DraftCreationError("held publication boundary is not a directory")
-        directory_identity = (directory_stat.st_dev, directory_stat.st_ino)
-    else:
-        windows_handle = _windows_capability_probe(delivery_dir)
-        directory_identity = _identity(delivery_dir)
-    if (
-        expected_directory_identity is not None
-        and directory_identity != expected_directory_identity
-    ):
-        _close_windows_handle(windows_handle)
-        if unix_delivery_fd is not None:
-            os.close(unix_delivery_fd)
-        raise DraftCreationError("validated drafts directory changed before publication")
+    for number in range(1, 100):
+        basename = f"مسودة-{kind}-{number:02d}"
+        target = delivery_dir / f"{basename}.docx"
+        sidecar = delivery_dir / f"{basename}.metadata.yaml"
 
-    def assert_publication_boundary() -> None:
-        if boundary_check is not None:
-            boundary_check()
-        if unix_delivery_fd is not None:
-            current = os.fstat(unix_delivery_fd)
-            if (current.st_dev, current.st_ino) != directory_identity:
-                raise DraftCreationError("held drafts directory changed during publication")
-        if (
-            boundary_check is None
-            and not caller_held_delivery
-            and _identity(delivery_dir) != directory_identity
-        ):
-            raise DraftCreationError("delivery directory changed during publication")
+        # Either pre-existing member reserves the suffix. lexists also treats
+        # a broken link as occupied, so no directory entry is overwritten.
+        if os.path.lexists(target) or os.path.lexists(sidecar):
+            continue
 
-    try:
-        assert_publication_boundary()
-        for number in range(1, 100):
-            assert_publication_boundary()
-            if number in _occupied_numbers(delivery_dir, kind, dir_fd=unix_delivery_fd):
-                continue
-            basename = f"مسودة-{kind}-{number:02d}"
-            target = delivery_dir / f"{basename}.docx"
-            sidecar = delivery_dir / f"{basename}.metadata.yaml"
-            if os.name == "nt":
-                _windows_extended(target)
-                _windows_extended(sidecar)
-                _windows_extended(
-                    delivery_dir / (".kanoonak-stage-" + "0" * 24 + ".metadata")
-                )
-                _windows_extended(
-                    delivery_dir / (".kanoonak-stage-" + "0" * 24 + ".docx")
-                )
-            metadata_payload = _metadata_yaml(metadata, target.name)
+        metadata_payload = _metadata_yaml(metadata, target.name)
+        _verify_metadata_payload(
+            metadata_payload,
+            filename=target.name,
+            ruling_digest=actual_ruling_sha256,
+            artifact_digest=artifact_sha256,
+        )
+
+        try:
+            _write_complete_exclusive(sidecar, metadata_payload)
+        except FileExistsError:
+            # A race before this invocation exposed either member may use the
+            # next suffix.
+            continue
+        except _ExclusiveWriteError as exc:
+            raise _partial_publication_error(preserved=(exc.path,)) from exc
+
+        try:
+            _write_complete_exclusive(target, payload)
+        except FileExistsError as exc:
+            raise _partial_publication_error(
+                preserved=(sidecar,), blocker=target
+            ) from exc
+        except OSError as exc:
+            raise _partial_publication_error(
+                preserved=(sidecar,), blocker=target
+            ) from exc
+        except _ExclusiveWriteError as exc:
+            raise _partial_publication_error(
+                preserved=(sidecar, exc.path)
+            ) from exc
+        except Exception as exc:
+            raise _partial_publication_error(preserved=(sidecar, target)) from exc
+
+        try:
+            final_docx_bytes = _read_bytes(target)
+            if hashlib.sha256(final_docx_bytes).hexdigest() != artifact_sha256:
+                raise DraftCreationError("published DOCX digest mismatch")
+            _verify_docx_text(final_docx_bytes, ruling_text)
+            final_metadata_bytes = _read_bytes(sidecar)
+            _read_exact(sidecar, metadata_payload)
             _verify_metadata_payload(
-                metadata_payload,
+                final_metadata_bytes,
                 filename=target.name,
                 ruling_digest=actual_ruling_sha256,
                 artifact_digest=artifact_sha256,
             )
-            if os.name == "nt":
-                published = _windows_publish_pair(
-                    delivery_dir=delivery_dir,
-                    target=target,
-                    sidecar=sidecar,
-                    payload=payload,
-                    metadata_payload=metadata_payload,
-                    ruling_text=ruling_text,
-                    ruling_digest=actual_ruling_sha256,
-                    artifact_digest=artifact_sha256,
-                )
-                if published is None:
-                    continue
-                docx_identity, sidecar_identity = published
-                assert_publication_boundary()
-                return PublicationResult(
-                    docx=target,
-                    metadata=sidecar,
-                    docx_identity=docx_identity,
-                    metadata_identity=sidecar_identity,
-                    ruling_text_sha256=actual_ruling_sha256,
-                    artifact_sha256=artifact_sha256,
-                )
-            assert_publication_boundary()
-            stage = _private_stage(delivery_dir, dir_fd=unix_delivery_fd)
-            staged_sidecar = stage / "metadata.yaml"
-            staged_docx = stage / "artifact.docx"
-            unix_stage_fd: int | None = None
-            if unix_delivery_fd is not None:
-                flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_NOFOLLOW", 0)
-                unix_stage_fd = os.open(stage.name, flags, dir_fd=unix_delivery_fd)
-            sidecar_stage_identity: tuple[int, int] | None = None
-            docx_stage_identity: tuple[int, int] | None = None
-            created_sidecar_identity: tuple[int, int] | None = None
-            created_docx_identity: tuple[int, int] | None = None
-            try:
-                sidecar_stage_identity = _write_complete_exclusive(
-                    staged_sidecar.name if unix_stage_fd is not None else staged_sidecar,
-                    metadata_payload,
-                    dir_fd=unix_stage_fd,
-                )
-                docx_stage_identity = _write_complete_exclusive(
-                    staged_docx.name if unix_stage_fd is not None else staged_docx,
-                    payload,
-                    dir_fd=unix_stage_fd,
-                )
-                _read_exact(
-                    _relative_when_anchored(staged_sidecar, unix_stage_fd),
-                    metadata_payload,
-                    dir_fd=unix_stage_fd,
-                )
-                _read_exact(
-                    _relative_when_anchored(staged_docx, unix_stage_fd),
-                    payload,
-                    dir_fd=unix_stage_fd,
-                )
-                staged_docx_bytes = _read_bytes(
-                    _relative_when_anchored(staged_docx, unix_stage_fd),
-                    dir_fd=unix_stage_fd,
-                )
-                if hashlib.sha256(staged_docx_bytes).hexdigest() != artifact_sha256:
-                    raise DraftCreationError("staged DOCX digest mismatch")
-                _verify_docx_text(staged_docx_bytes, ruling_text)
-                _verify_metadata_payload(
-                    _read_bytes(
-                        _relative_when_anchored(staged_sidecar, unix_stage_fd),
-                        dir_fd=unix_stage_fd,
-                    ),
-                    filename=target.name,
-                    ruling_digest=actual_ruling_sha256,
-                    artifact_digest=artifact_sha256,
-                )
-                assert_publication_boundary()
-                try:
-                    _link_noreplace(
-                        staged_sidecar,
-                        sidecar,
-                        source_dir_fd=unix_stage_fd,
-                        target_dir_fd=unix_delivery_fd,
-                    )
-                except FileExistsError:
-                    continue
-                created_sidecar_identity = sidecar_stage_identity
-                assert_publication_boundary()
-                try:
-                    _link_noreplace(
-                        staged_docx,
-                        target,
-                        source_dir_fd=unix_stage_fd,
-                        target_dir_fd=unix_delivery_fd,
-                    )
-                except FileExistsError:
-                    raise DraftCreationError(
-                        f"concurrent collision left preserved orphan {sidecar}"
-                    )
-                created_docx_identity = docx_stage_identity
-                docx_identity = _identity(
-                    _relative_when_anchored(target, unix_delivery_fd),
-                    dir_fd=unix_delivery_fd,
-                )
-                sidecar_identity = _identity(
-                    _relative_when_anchored(sidecar, unix_delivery_fd),
-                    dir_fd=unix_delivery_fd,
-                )
-                if docx_identity != docx_stage_identity or sidecar_identity != sidecar_stage_identity:
-                    raise DraftCreationError("published leaf identity mismatch")
-                assert_publication_boundary()
-                _read_exact(
-                    _relative_when_anchored(target, unix_delivery_fd),
-                    payload,
-                    dir_fd=unix_delivery_fd,
-                )
-                _read_exact(
-                    _relative_when_anchored(sidecar, unix_delivery_fd),
-                    metadata_payload,
-                    dir_fd=unix_delivery_fd,
-                )
-                final_docx_bytes = _read_bytes(
-                    _relative_when_anchored(target, unix_delivery_fd),
-                    dir_fd=unix_delivery_fd,
-                )
-                if hashlib.sha256(final_docx_bytes).hexdigest() != artifact_sha256:
-                    raise DraftCreationError("published DOCX digest mismatch")
-                _verify_docx_text(final_docx_bytes, ruling_text)
-                _verify_metadata_payload(
-                    _read_bytes(
-                        _relative_when_anchored(sidecar, unix_delivery_fd),
-                        dir_fd=unix_delivery_fd,
-                    ),
-                    filename=target.name,
-                    ruling_digest=actual_ruling_sha256,
-                    artifact_digest=artifact_sha256,
-                )
-                _sync_directory(delivery_dir, dir_fd=unix_delivery_fd)
-                return PublicationResult(
-                    docx=target, metadata=sidecar,
-                    docx_identity=docx_identity, metadata_identity=sidecar_identity,
-                    ruling_text_sha256=actual_ruling_sha256,
-                    artifact_sha256=artifact_sha256,
-                )
-            except Exception:
-                orphaned: list[Path] = []
-                for path, identity in (
-                    (target, created_docx_identity),
-                    (sidecar, created_sidecar_identity),
-                ):
-                    if identity is None:
-                        continue
-                    try:
-                        _identity(
-                            _relative_when_anchored(path, unix_delivery_fd),
-                            dir_fd=unix_delivery_fd,
-                        )
-                    except OSError as exc:
-                        if exc.errno == errno.ENOENT:
-                            continue
-                    orphaned.append(path)
-                if orphaned:
-                    raise DraftCreationError(
-                        "publication failed; preserved unprovable orphan(s): "
-                        + ", ".join(str(path) for path in orphaned)
-                    )
-                raise
-            finally:
-                _cleanup_stage(
-                    stage, stage_fd=unix_stage_fd, delivery_fd=unix_delivery_fd
-                )
-                if unix_stage_fd is not None:
-                    os.close(unix_stage_fd)
-        raise DraftCreationError("all two-digit draft numbers are already in use")
-    finally:
-        _close_windows_handle(windows_handle)
-        if unix_delivery_fd is not None:
-            os.close(unix_delivery_fd)
+        except Exception as exc:
+            raise _partial_publication_error(
+                preserved=(sidecar, target)
+            ) from exc
+
+        return PublicationResult(
+            docx=target,
+            metadata=sidecar,
+            ruling_text_sha256=actual_ruling_sha256,
+            artifact_sha256=artifact_sha256,
+        )
+    raise DraftCreationError("all two-digit draft numbers are already in use")
+
 
 
 def create_workspace_draft(
     *,
-    workspace_root: Path,
     case_folder: str,
+    case_identity: dict[str, Any],
     kind: str,
     ruling_text: str,
     expected_ruling_sha256: str,
     formatting: dict[str, Any],
     metadata: dict[str, Any],
-    storage_probe: Callable[[int], Any] | None = None,
-    workspace_fd: int | None = None,
 ) -> PublicationResult:
-    """Publish beneath one ready root and preserve output on boundary uncertainty."""
+    """Publish beneath one complete canonical case in the given process root."""
 
-    boundary = resolve_case_draft_boundary(
-        workspace_root,
-        case_folder,
-        storage_probe=storage_probe,
-        workspace_fd=workspace_fd,
+    boundary = resolve_case_draft_boundary(case_folder, case_identity)
+    _require_metadata_case(metadata, case_folder)
+    return _publish_to_drafts(
+        delivery_dir=boundary.drafts_directory,
+        kind=kind,
+        ruling_text=ruling_text,
+        expected_ruling_sha256=expected_ruling_sha256,
+        formatting=formatting,
+        metadata=metadata,
     )
-    try:
-        _require_metadata_case(metadata, case_folder)
-        result = _publish_to_drafts(
-            delivery_dir=boundary.drafts_directory,
-            delivery_fd=boundary.drafts_fd,
-            boundary_check=lambda: _assert_boundary_current(boundary),
-            expected_directory_identity=boundary.drafts_identity,
-            kind=kind,
-            ruling_text=ruling_text,
-            expected_ruling_sha256=expected_ruling_sha256,
-            formatting=formatting,
-            metadata=metadata,
-        )
-        reopened: CaseDraftBoundary | None = None
-        try:
-            reopened = resolve_case_draft_boundary(
-                workspace_root,
-                case_folder,
-                storage_probe=storage_probe,
-                workspace_fd=boundary.root_fd,
-            )
-            if (
-                reopened.root_identity != boundary.root_identity
-                or reopened.case_identity != boundary.case_identity
-                or reopened.drafts_identity != boundary.drafts_identity
-            ):
-                raise DraftCreationError("case boundary identity changed")
-        except (OSError, DraftCreationError) as exc:
-            assert boundary.drafts_fd is not None
-            preserved = _rollback_published_pair(
-                result, drafts_fd=boundary.drafts_fd
-            )
-            if preserved:
-                raise DraftCreationError(
-                    "publication boundary changed; preserved unprovable item(s): "
-                    + ", ".join(preserved)
-                ) from exc
-            raise DraftCreationError(
-                "publication boundary changed; no published draft leaf remains visible"
-            ) from exc
-        finally:
-            if reopened is not None:
-                reopened.close()
-        return result
-    finally:
-        boundary.close()
 
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--case-folder", required=True)
+    parser.add_argument("--case-identity-json", type=Path, required=True)
     parser.add_argument("--kind", choices=sorted(ALLOWED_KINDS), required=True)
     parser.add_argument("--ruling-file", type=Path, required=True)
     parser.add_argument("--expected-ruling-sha256", required=True)
@@ -1557,45 +674,44 @@ def _parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(
-    argv: list[str] | None = None,
-    *,
-    storage_probe: Callable[[int], Any] | None = None,
-) -> int:
+def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
-    workspace_fd = -1
     try:
         workspace = _load_workspace_module()
-        workspace_root, workspace_fd, _root_identity = workspace._open_inherited_cwd()
         ruling_text = args.ruling_file.read_bytes().decode("utf-8", errors="strict")
-        metadata = json.loads(args.metadata_json.read_text(encoding="utf-8"))
-        formatting = json.loads(args.formatting_json.read_text(encoding="utf-8"))
-        if not isinstance(metadata, dict) or not isinstance(formatting, dict):
-            raise DraftCreationError("metadata and formatting JSON must be objects")
+        case_identity = workspace.load_strict_json(
+            args.case_identity_json.read_text(encoding="utf-8")
+        )
+        metadata = workspace.load_strict_json(
+            args.metadata_json.read_text(encoding="utf-8")
+        )
+        formatting = workspace.load_strict_json(
+            args.formatting_json.read_text(encoding="utf-8")
+        )
+        if not all(
+            isinstance(value, dict)
+            for value in (case_identity, metadata, formatting)
+        ):
+            raise DraftCreationError(
+                "case identity, metadata, and formatting JSON must be objects"
+            )
         result = create_workspace_draft(
-            workspace_root=workspace_root,
             case_folder=args.case_folder,
+            case_identity=case_identity,
             kind=args.kind,
             ruling_text=ruling_text,
             expected_ruling_sha256=args.expected_ruling_sha256,
             formatting=formatting,
             metadata=metadata,
-            storage_probe=storage_probe,
-            workspace_fd=workspace_fd,
         )
     except (OSError, ValueError, UnicodeError, json.JSONDecodeError, DraftCreationError) as exc:
         print(f"DOCX draft creation refused: {exc}", file=sys.stderr)
         return 2
-    finally:
-        if workspace_fd >= 0:
-            os.close(workspace_fd)
     print(json.dumps({
         "docx": str(result.docx), "metadata": str(result.metadata),
-        "docx_identity": list(result.docx_identity),
-        "metadata_identity": list(result.metadata_identity),
         "ruling_text_sha256": result.ruling_text_sha256,
         "artifact_sha256": result.artifact_sha256,
-    }, ensure_ascii=False))
+    }, ensure_ascii=True))
     return 0
 
 

@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any
 
 
-UNIVERSAL_VERSION = "2026-08-24.1"
+UNIVERSAL_VERSION = "2026-08-26.1"
 MAX_RULING_CODEPOINTS = 10_000
 
 NOT_CHECKED = [
@@ -27,11 +27,6 @@ NOT_CHECKED = [
     "approval",
     "signature",
     "issuance",
-    "kind-selection",
-    "persona-compatibility",
-    "judge-value-provenance",
-    "paragraph-role-selection",
-    "storage-synchronization-classification",
 ]
 
 _ERRORS = {

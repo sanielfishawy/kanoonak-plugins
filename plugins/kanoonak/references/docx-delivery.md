@@ -1,23 +1,29 @@
 # DOCX delivery reference
 
 The ruling skill's clean artifact is a judge-editable Word draft. The MCP
-connector does not write files. Publication is available only after the shared
-workspace entry gate reports `ready`. The publisher uses the host-provided
-current workspace root and accepts only one canonical case-folder leaf. It
-revalidates the workspace marker and canonical root files, requires the case's
-complete existing ten-item structure, and derives the destination as that
-case's exact existing `المسودات/` directory.
+connector does not write files. Local publication is available only after the
+user has requested it and the shared [local-folder rules](workflow-contract.md#local-folder-rules)
+have confirmed the connected project folder. The publisher uses that process
+current working directory and accepts one canonical case-folder leaf plus the
+minimal selected case identity described below, never a root path. It requires
+the selected case's complete existing ten-item structure and derives the
+destination as that case's exact existing `المسودات/` directory.
 
-The helper accepts no workspace or delivery-root path, never searches outside
-the validated workspace, and never selects or creates a case or drafts
-directory. If the exact boundary is absent, malformed, symlinked, replaced, or
-no longer on accepted storage, stop truthfully. Storage synchronization remains
-subject to the workspace gate's honest limitation; ruling checks do not prove
-it independently.
+The helper accepts no workspace or delivery-root path, never searches for,
+selects, or creates another root, case, or drafts directory. It validates only
+the process-CWD/selected-canonical-case/`المسودات` boundary. It also accepts the
+selected authenticated case's minimal full identity JSON—its full top-level
+five-field case tuple and ordered appeal members/roles, with no surplus or
+duplicate keys—and requires an exact match with the existing `الملخص.md`
+identity before writing. The same strict JSON parsing applies to metadata and
+formatting input. If that closed boundary is
+absent, malformed, or belongs to a different identity, stop truthfully.
+Existing local indirection is part of the user's folder arrangement; Kanoonak
+makes no storage or physical ancestry certification claim.
 
 ```text
-<validated-workspace>/<case-folder>/المسودات/<next-name>.docx
-<validated-workspace>/<case-folder>/المسودات/<next-name>.metadata.yaml
+<connected-project-folder>/<case-folder>/المسودات/<next-name>.docx
+<connected-project-folder>/<case-folder>/المسودات/<next-name>.metadata.yaml
 ```
 
 ## Checked input
@@ -53,6 +59,7 @@ The host-side helper is
 
 ```text
 --case-folder <one-canonical-existing-case-leaf>
+--case-identity-json <minimal-full-case-identity>
 --kind حكم|حكم-تمهيدي|قرار
 --ruling-file <exact-UTF-8-text>
 --expected-ruling-sha256 <universal-check-digest>
@@ -70,18 +77,13 @@ accepts, repairs, reuses, overwrites, or deletes an existing leaf:
 مسودة-قرار-01.docx
 ```
 
-Both payloads are complete-written, synced, reread, digest-checked, and
-structurally reopened in same-directory staging. Unix uses its descriptor-held
-private stage directory. Windows uses direct random `CREATE_NEW` stage leaves
-whose native handles deny write/delete sharing until publication and whose
-opened links are removed by handle disposition. Publication uses atomic
-no-replace hard links, sidecar first and DOCX last. A collision on the first
-public link safely retries because this invocation published nothing. On Unix,
-once either public link exists, any later collision or failure preserves and
-reports every visible or uncertain final leaf: a pathname cannot be deleted
-conditionally on inode identity. Windows retains its native handle-disposition
-cleanup where the opened link identity is stable. Every preserved or crash
-orphan visibly reserves its number.
+Both payloads are complete-written with exclusive final-leaf creation, then
+reread, digest-checked, and structurally reopened. A collision may advance only
+before this invocation has made either member visible or uncertain. Once either
+member was created or may have been created, preserve it, report the exact
+partial outcome, and stop. Never delete, overwrite, silently retry a partial
+pair, or publish elsewhere. Every preserved or uncertain member reserves its
+number.
 
 The sidecar carries draft/state/case/kind metadata, the exact paired artifact
 name, `ruling_text_sha256` for the checked UTF-8 body, and `artifact_sha256` for

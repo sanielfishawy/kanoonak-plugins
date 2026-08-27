@@ -27,8 +27,7 @@ convention: 2026-07-21            # نسخة اتفاقية المجلد
 ```
 Kanoonak/
 |-- README.md            (هذا الدليل)
-|-- الفهرس.md            (سجل القضايا — جدول واحد، صف لكل قضية)
-|-- أسلوبي.md            (الشخصية المحلية — تفضيلات القاضي فوق التوجيه الأم)
+|-- أسلوبي.md            (الشخصية المحلية — تفضيلات محلية متوافقة)
 \-- <مجلد لكل قضية>      (بقواعد التسمية في البند 3)
 ```
 
@@ -48,7 +47,7 @@ Kanoonak/
 \-- الأحكام/             (النصوص الصادرة — نهائي أو معدل فقط)
 ```
 
-> **Gloss (EN):** `Kanoonak` is the default name for a new workspace; `قانونك` remains supported for a legacy or custom workspace. The root holds this guide, the case registry (الفهرس), the local persona file (أسلوبي), and one folder per matter. Every matter bootstraps with exactly ten items — the summary and deadlines files plus eight slot folders (inbox, appealed judgment, petitions, memoranda, expert reports, company regulation, drafts, issued rulings) — created if absent, never overwritten.
+> **Gloss (EN):** `Kanoonak` is the default name for a new workspace; `قانونك` remains supported for a legacy or custom workspace. The managed root contains this guide, `أسلوبي.md`, and the case folders. Every matter has exactly ten items — the summary and deadlines files plus eight slot folders (inbox, appealed judgment, petitions, memoranda, expert reports, company regulation, drafts, issued rulings) — created if absent, never overwritten.
 
 ## 3. قواعد التسمية — Naming grammar
 
@@ -62,12 +61,12 @@ Kanoonak/
 | التماس إعادة النظر | التماس-N-لسنة-YYق | التماس-17-لسنة-82ق | iltimas petition |
 
 - ترتيب الأعضاء في الأسماء المضمومة: الأصلي أولاً ثم المنضم فالفرعي فالضمني، تصاعدياً بالرقم داخل كل صفة، والأعضاء المتتالون بسنة واحدة يجمعون تحت «لسنة-YYق» واحدة.
-- عنصر المحكمة في المفتاح يستكمل من «الفهرس.md» (مساحة العمل لدائرة واحدة)، والملخص يحمل المفتاح كاملاً.
+- تُؤخذ المحكمة المذكورة في الملخص من أوراق القضية الموثقة أو من مرجع القضية الصحيح (`case_ref`). وإذا لم تثبت المحكمة، فلا يُنشأ مجلد القضية.
 - عند ضم لاحق يعاد تسمية مجلد الأصلي بالصيغة المضمومة وتنقل محتويات مجلد الشقيق إليه ولا يبقى في مجلد الشقيق إلا ملف «مضموم.md» يدل على المجلد الجامع؛ ولا يجرى الضم إلا بتعليمات القاضي.
 - كل جزء اسم حر الاختيار (أسماء مجلدات الخصوم، أسماء مستندات الحوافظ) حروف عربية وأرقام غربية وشرطات فقط، لا مسافات، وبطول لا يجاوز عشرين حرفاً استحساناً.
 - الأسماء كلها بترميز NFC؛ وقراءة الأسماء تتسامح مع اختلاف الترميز على القرص وتطبعه قبل المطابقة.
 
-> **Gloss (EN):** A case-folder name is the filesystem projection of the case key: «رقم» dropped, hyphens for spaces, «ق» attached to the 2-digit judicial year, Western digits, ISO dates in names. Consolidated names order members أصلي then منضم then فرعي then ضمني, grouping consecutive same-year members under one «لسنة-YYق». The forum comes from الفهرس.md; الملخص.md holds the full key. Mid-stream consolidation renames the original's folder, moves the sibling's contents in, and leaves a single مضموم.md pointer — on the judge's instruction only. Free-choice segments: Arabic letters, Western digits, hyphens; no spaces; at most 20 characters recommended. All names are NFC.
+> **Gloss (EN):** A case-folder name is the filesystem projection of the case key: «رقم» dropped, hyphens for spaces, «ق» attached to the 2-digit judicial year, Western digits, ISO dates in names. Consolidated names order members أصلي then منضم then فرعي then ضمني, grouping consecutive same-year members under one «لسنة-YYق». The court shown in the summary comes from the documented case papers or a valid case reference (`case_ref`). If the court is not established, no case folder is created. Mid-stream consolidation renames the original's folder, moves the sibling's contents in, and leaves a single مضموم.md pointer — on the judge's instruction only. Free-choice segments: Arabic letters, Western digits, hyphens; no spaces; at most 20 characters recommended. All names are NFC.
 
 ## 4. علامات نوع الملف ومفاتيح البيانات — File-kind markers and front-matter keys
 
@@ -75,7 +74,7 @@ Kanoonak/
 
 `matter-summary` (ملخص قضية) ، `deadlines` (مواعيد) ، `local-persona` (شخصية محلية) ، `index` (فهرس) ، `document` (مستند مقيد) ، `page` (صفحة واردة) ، `delivery-manifest` (بيان تسليم) ، `draft` (مسودة) ، `ruling` (حكم صادر) ، `bundle-list` (قائمة حافظة) ، `merged-pointer` (دليل ضم) ، `readme` (هذا الدليل)
 
-مفاتيح البيانات إنجليزية لتنضبط المطابقة الآلية، وقيمها عربية، وكل مفتاح يكتب المساعد بجواره شرحاً عربياً عند التوليد:
+تكون مفاتيح البيانات بالإنجليزية لضمان المطابقة الآلية الدقيقة، وتكون قيمها بالعربية. ويجوز للأداة أن تكتب كتلة YAML على هيئة كائن JSON صالح؛ والشروح العربية في الجدول الآتي دليل للقراءة وليست تعليقات إلزامية داخل كل ملف.
 
 | المفتاح | الشرح العربي | Gloss (EN) |
 |---|---|---|
@@ -136,14 +135,14 @@ Kanoonak/
 | session | جلسة النطق | pronouncement session |
 | subject | موضوع الحكم التمهيدي | interlocutory subject |
 | directive_version | نسخة التوجيه الأم المنتجة للمسودة | producing directive version |
-| local_persona_updated | تاريخ ملف أسلوبي المعتمد | consumed أسلوبي update date |
+| local_persona_updated | تاريخ ملف أسلوبي المعتمد، أو «غير موجود» عند غيابه | consumed أسلوبي update date, or غير موجود when absent |
 | parent_version | نسخة التوجيه الأم آخر ما روجعت عليه | last reconciled parent version |
 | merged_into | المجلد الجامع وعضو هذا الدليل | merge target (folder + member) |
 | member | صورة عضو هذا الدليل | this pointer's member tuple |
 | id_map | جدول تحويل معرفات المواعيد عند الضم | old-to-new deadline-id map |
 | renames | جدول إعادة التسمية عند الضم | rename record |
 
-> **Gloss (EN):** Every structured file opens with YAML front-matter whose first key is the ASCII marker `kanoonak:` (twelve values above). Keys are English for exact machine matching; values are Arabic; the assistant writes an Arabic gloss comment beside each key on generation.
+> **Gloss (EN):** Every structured file opens with YAML front-matter whose first key is the ASCII marker `kanoonak:` (twelve values above). Data keys are in English to ensure exact machine matching, and their values are in Arabic. The helper may write the YAML block as a valid JSON object; the Arabic explanations in the following table are a reading guide, not mandatory inline comments in every file.
 
 ## 5. جدول المفردات القانونية — Canonical vocabulary table
 
@@ -152,7 +151,8 @@ Kanoonak/
 | الفئة | القيم المعتمدة | Gloss (EN) |
 |---|---|---|
 | جذر مساحة العمل | Kanoonak (الافتراضي) ، قانونك (قديم أو مخصص) | workspace root (default; legacy/custom) |
-| ملفات مساحة العمل | README.md ، الفهرس.md ، أسلوبي.md | workspace files |
+| ملفات مساحة العمل | README.md ، أسلوبي.md | managed workspace files |
+| ملف قديم اختياري | الفهرس.md | optional legacy file (not managed) |
 | ملفا القضية الإلزاميان | الملخص.md ، المواعيد.md | the two mandatory files |
 | مجلدات القضية الثمانية | الوارد ، الحكم-المستأنف ، الصحف ، المذكرات ، تقارير-الخبرة ، اللائحة ، المسودات ، الأحكام | the eight slot folders |
 | ملفات بنيوية | تسليم.yaml ، قائمة.md ، مضموم.md | structural files |
@@ -204,15 +204,15 @@ Kanoonak/
 8. **H8** — لا ملف بحالة «مسودة» أو باسم يبدأ بمسودة- في «الأحكام»، ولا ملف بغير ذلك في «المسودات».
 9. **H9** — لا علامة فراغ ⟦…⟧ في ملف «نهائي» أو «معدل».
 10. **H10** — كل ملف «معدل» يدل حقل «supersedes» فيه على نسخة سابقة قائمة بجواره، والسلسلة متصلة.
-11. **H11** — في «الفهرس.md» صف واحد لكل مجلد قضية، وخانتا الحالة والموعد القادم تطابقان ملفات المجلد.
+11. **H11** — «الفهرس.md» ملف قديم اختياري. إن وجد يترك كما هو، ولا تعتمد عليه الإضافة لاختيار القضية أو تحديد مجلدها أو إنشاء ملفاتها.
 12. **H12** — إن استشهدت مسودة أو حكم بلائحة شركة وجب وجود ملف اللائحة باسم صاحبها في مجلد «اللائحة» — وإلا أبلغ عن الفجوة.
 13. **H13** — كل ملف أو مجلد لا يطابق اسماً معتمداً يدرج في قائمة تعرض على القاضي، والتصرف فيه له وحده.
 14. **H14** — اتساق التواريخ: الجلسات لا تسبق أحكام أول درجة، وجلسة كل حكم صادر من سجل جلسات الملخص، وتواريخ المواعيد لا تسبق تواريخ مصادرها.
-15. **H15** — مجلد الضم لا يحوي إلا «مضموم.md» صحيحاً يدل على مجلد جامع قائم، وصفه في الفهرس بحالة «مضمومة».
-16. **H16** — ملفات مساحة العمل الثلاثة قائمة ببياناتها، وكل مجلد قضية غير مضموم يحوي العناصر العشرة كاملة، وجدول المفردات في هذا الدليل تام مطابق للصور المعتمدة.
+15. **H15** — مجلد الضم لا يحوي إلا «مضموم.md» صحيحاً يدل على مجلد جامع قائم.
+16. **H16** — يجوز ألا يوجد أي من ملفي مساحة العمل المدَارين «README.md» و«أسلوبي.md». فإن وجد أحدهما، وجب أن يوجدا معاً كملفين عاديين بالبيانات المعتمدة. وكل مجلد قضية غير مضموم يحوي العناصر العشرة كاملة، وجدول المفردات في هذا الدليل تام ويطابق القيم المعتمدة.
 17. **H17** — كل «تسليم.yaml» ذكرت قضيته يطابق مجلده، ودفعة مجهولة القضية لا تكتب في مجلد قضية قبل تثبت المساعد من القاضي.
 
-> **Gloss (EN):** The housekeeping audit checks: parseable folder names (H1); complete mandatory front-matter in الملخص/المواعيد incl. per-member first-instance numbers and per-party role data (H2); folder-name/summary key agreement (H3); memoranda subfolders matching party slugs (H4); identity blocks on filed documents with member-tuple and known-party checks (H5); next-deadline synchronization (H6); expert-referral entails a report-deadline entry with the two-week rule (H7); draft/issued separation (H8); no placeholder tokens in issued files (H9); intact supersedes chains (H10); registry agreement (H11); cited-لائحة presence (H12); unclassified items listed for the judge (H13); date coherence (H14); merged-pointer legitimacy (H15); workspace integrity incl. the ten-item set and this vocabulary table (H16); delivery-manifest/case agreement and no unconfirmed null-case batches (H17). The audit reports gaps; it never repairs, moves, or deletes without the judge's instruction.
+> **Gloss (EN):** The housekeeping audit checks: parseable folder names (H1); complete mandatory front-matter in الملخص/المواعيد incl. per-member first-instance numbers and per-party role data (H2); folder-name/summary key agreement (H3); memoranda subfolders matching party slugs (H4); identity blocks on filed documents with member-tuple and known-party checks (H5); next-deadline synchronization (H6); expert-referral entails a report-deadline entry with the two-week rule (H7); draft/issued separation (H8); no placeholder tokens in issued files (H9); intact supersedes chains (H10); an optional legacy `الفهرس.md` left unchanged and unused for case selection, folder choice, or file creation (H11); cited-لائحة presence (H12); unclassified items listed for the judge (H13); date coherence (H14); a merged-pointer folder containing only a valid pointer to an existing consolidated folder (H15); both managed root files may be absent, but if either exists both are regular files with prescribed data, while every non-merged case keeps the ten-item set and this vocabulary remains complete (H16); delivery-manifest/case agreement and no unconfirmed null-case batches (H17). The audit reports gaps; it never repairs, moves, or deletes without the judge's instruction.
 
 ## 8. نسخة الاتفاقية — Convention version
 
