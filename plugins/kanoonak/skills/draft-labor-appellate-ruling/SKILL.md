@@ -5,13 +5,13 @@ description: Draft and check a labor-appellate judicial ruling in formal Egyptia
 
 # Draft a labor-appellate ruling
 
-**Skill version:** `2026-08-27.2`
+**Skill version:** `2026-08-27.3`
 
 Read [workflow-contract.md](../../references/workflow-contract.md) before
 drafting. It supplies the common readiness, local-folder, kind-routing, and
 checker-status contract. Read [docx-delivery.md](../../references/docx-delivery.md)
 before creating the artifact. The compatible workflow and specialized checker
-versions are `2026-08-27.2` and `2026-08-24.1`; stop on a mismatch. The
+versions are `2026-08-27.3` and `2026-08-24.1`; stop on a mismatch. The
 compatible directive remains the sole source of legal templates.
 
 ## Activation and judicial authority
@@ -43,9 +43,16 @@ Templates 3, 4, and 5 require the judge to request their preliminary action.
 1. Call `begin_task` and verify role and compatible versions.
 2. Complete the opening skill's OCR-first preparation: authenticated case,
    complete processed-page OCR coverage, every page OCR-only unless a named
-   material question justifies a visual check, exact eight counts/statuses, and
-   no unresolved material issue. Before any image call, state its batch/page,
-   exact OCR passage or fact, one allowed trigger, and concrete question.
+   material question justifies a visual check, and exact eight counts/statuses.
+   Before any image call, state its batch/page, exact OCR passage or fact, one
+   allowed trigger, and concrete question. Select the authorized `kind_id` and
+   obtain any required judge disposition or preliminary-action request before
+   deciding which facts that kind requires; keep that authority gate separate
+   from factual confirmation. Resolve a required identity or factual gap only
+   through the shared contract's targeted case-information
+   question; every other unresolved material issue remains a stop. Then obtain the shared
+   contract's completed-summary confirmation. Do not draft, present, or save
+   before that direct confirmation.
 3. Retrieve and bind the closest approved primary labor-appellate judicial exemplar
    before drafting.
 4. Record preflight separately: readiness, versions, `kind_id`, disposition or

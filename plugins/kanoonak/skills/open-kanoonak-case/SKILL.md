@@ -5,7 +5,7 @@ description: Prepare an authenticated Kanoonak case for legal work with complete
 
 # Open a Kanoonak case
 
-**Skill version:** `2026-08-27.2`
+**Skill version:** `2026-08-27.3`
 
 Read [workflow-contract.md](../../references/workflow-contract.md) first. Use
 the existing authenticated, read-only MCP connection for case and page data.
@@ -42,12 +42,14 @@ the existing authenticated, read-only MCP connection for case and page data.
 7. Any unresolved material issue blocks `case_ready` and every later drafting,
    audit, or presentation step. Never infer unclear identity or text.
 8. If a requested local operation needs a missing canonical case structure,
-   follow the shared contract's local-folder rules. Obtain complete case
-   identity and the direct first-write confirmation before invoking
-   `manage_workspace.py create-case` from the one connected folder. Establish
-   the court from documented case papers or a valid `case_ref`, never from a
-   root index. Create only the canonical case structure and never overwrite,
-   move, merge, rename, or delete existing data.
+   apply only the shared contract's identity-only case-information confirmation;
+   an ordinary read-only opening never invokes it. Then follow the shared
+   contract's local-folder rules and direct first-write confirmation before
+   invoking `manage_workspace.py create-case` from the one connected folder.
+   Establish the court from authenticated case papers, a valid `case_ref`, or a
+   direct judge-supplied value resolved and reconfirmed under that rule, never
+   from a root index. Create only the canonical case structure and never
+   overwrite, move, merge, rename, or delete existing data.
 9. Report cases, batches, documents, pages, the exact eight counts/statuses,
    visual checks, gaps, and readiness. `case_ready` is only the result of this
    transient proof; never claim that readiness was persisted. Do not imply
