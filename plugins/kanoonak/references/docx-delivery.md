@@ -1,106 +1,83 @@
-# DOCX delivery reference
+# Native DOCX delivery reference
 
-The ruling skill's clean artifact is a judge-editable Word draft. The MCP
-connector does not write files. Local publication is available only after the
-user has requested it and the shared [local-folder rules](workflow-contract.md#local-folder-rules)
-have confirmed the connected project folder. The publisher uses that process
-current working directory and accepts one canonical case-folder leaf plus the
-minimal selected case identity described below, never a root path. It requires
-the selected case's complete existing ten-item structure and derives the
-destination as that case's exact existing `المسودات/` directory.
+This is Kanoonak's single authority for ruling DOCX creation, delivery, and
+Word formatting. Follow the shared
+[local-folder rules](workflow-contract.md#local-folder-rules) for every local
+write; do not restate or relax them elsewhere.
 
-The helper accepts no workspace or delivery-root path, never searches for,
-selects, or creates another root, case, or drafts directory. It validates only
-the process-CWD/selected-canonical-case/`المسودات` boundary. It also accepts the
-selected authenticated case's minimal full identity JSON—its full top-level
-five-field case tuple and ordered appeal members/roles, with no surplus or
-duplicate keys—and requires an exact match with the existing `الملخص.md`
-identity before writing. The same strict JSON parsing applies to metadata and
-formatting input. If that closed boundary is
-absent, malformed, or belongs to a different identity, stop truthfully.
-Existing local indirection is part of the user's folder arrangement; Kanoonak
-makes no storage or physical ancestry certification claim.
+## Automatic artifact
 
-```text
-<connected-project-folder>/<case-folder>/المسودات/<next-name>.docx
-<connected-project-folder>/<case-folder>/المسودات/<next-name>.metadata.yaml
-```
+For the initial content-safe ruling shown for review, and for every content-safe
+revision shown afterward, automatically use the host's native Documents
+capability to create a separate editable DOCX. Do not ask a per-draft save
+question. Every DOCX remains a review draft; only the labor-appellate judge may
+approve, sign, or issue a ruling.
 
-## Checked input
+Before the first local write for the case in the chat, obtain the one destination
+confirmation required by the shared local-folder rules. Reuse it while its chat,
+authenticated connector context, selected case, connected folder, and exact
+case destination remain unchanged; any change requires fresh confirmation.
 
-Before delivery, run the universal checker over the exact ruling text. Pass its
-`ruling_sha256` unchanged as `expected_ruling_sha256`. The helper reruns that
-checker, refuses any failure or digest mismatch, and performs no normalization,
-date rewrite, digit shaping, trimming, or other text transformation.
+When that confirmed destination is available, save only in the selected
+canonical case's existing `المسودات/` directory. Never create or use a fallback
+folder and never write a review draft to `الأحكام/`. If no confirmed case
+destination is available, create a native chat artifact when the host supports
+one and say truthfully that it was not saved in the case folder. If native DOCX
+creation itself is unavailable or fails, keep the content-safe chat draft and
+say truthfully that no DOCX was created.
 
-Pass transient formatting JSON with exactly one item per canonical paragraph:
+## Names and file safety
 
-```json
-{"paragraphs":[{"role":"title","opening_phrase":null}]}
-```
-
-The closed roles are:
-
-- `title`: centered, wholly bold, no first-line indent;
-- `transition`: centered, wholly bold, 360-twip first-line indent;
-- `substantive`: fully justified, 360-twip first-line indent, with one non-empty
-  exact paragraph prefix in `opening_phrase` to bold;
-- `plain`: fully justified, unbolded, no first-line indent.
-
-The workflow chooses these roles from the directive and bound exemplar. The
-publisher validates the closed shape, count, nullability, and exact prefix, but
-does not infer or certify the paragraph's legal role. Formatting JSON is never
-persisted or logged.
-
-## Publication
-
-The host-side helper is
-`plugins/kanoonak/scripts/create_ruling_docx.py`. Its command boundary is:
+Allocate the lowest unused number from `01` through `99` for the ruling's own
+kind:
 
 ```text
---case-folder <one-canonical-existing-case-leaf>
---case-identity-json <minimal-full-case-identity>
---kind حكم|حكم-تمهيدي|قرار
---ruling-file <exact-UTF-8-text>
---expected-ruling-sha256 <universal-check-digest>
---formatting-json <transient-role-map>
---metadata-json <draft-metadata>
+مسودة-حكم-NN.docx
+مسودة-حكم-تمهيدي-NN.docx
+مسودة-قرار-NN.docx
 ```
 
-Allocation is per kind. Either same-number `.docx` or `.metadata.yaml` member
-reserves that number. The helper creates the next two-digit pair and never
-accepts, repairs, reuses, overwrites, or deletes an existing leaf:
+An existing DOCX or same-stem legacy `.metadata.yaml` file reserves that
+number. Every revision gets a new number. Stop truthfully if all numbers for the
+kind are reserved. Never overwrite, delete, repair, rename, reuse, or silently
+replace an existing or uncertain file, and never switch destinations after a
+conflict or failure.
 
-```text
-مسودة-حكم-01.docx
-مسودة-حكم-تمهيدي-01.docx
-مسودة-قرار-01.docx
-```
+The native Documents capability may inspect, render, and correct only the
+current not-yet-delivered attempt. Before reporting success, verify that the
+DOCX exists at the reported destination, is editable, and reopens and renders
+cleanly. If verification fails or placement is incomplete, report what happened
+as partial or uncertain rather than success, preserve the attempt unchanged, and
+do not retry or mutate it.
 
-Both payloads are complete-written with exclusive final-leaf creation, then
-reread, digest-checked, and structurally reopened. A collision may advance only
-before this invocation has made either member visible or uncertain. Once either
-member was created or may have been created, preserve it, report the exact
-partial outcome, and stop. Never delete, overwrite, silently retry a partial
-pair, or publish elsewhere. Every preserved or uncertain member reserves its
-number.
+## Clean text
 
-The sidecar carries draft/state/case/kind metadata, the exact paired artifact
-name, `ruling_text_sha256` for the checked UTF-8 body, and `artifact_sha256` for
-the final DOCX bytes. The persistent case validator independently extracts the
-ordinary Word paragraphs joined with exact `\n\n` and checks both digests.
-Recomputing only the artifact digest after editing cannot validate stale
-checked-text metadata.
+The DOCX body contains only the exact clean ruling presented for review. Keep
+preparation notes, checker results, audits, statuses, metadata, and delivery
+messages outside it. Do not normalize, trim, rewrite, or otherwise transform
+the body during creation. Preserve Western digits U+0030-U+0039 and unpadded
+slash dates exactly.
 
-## Word contract
+## Word format
 
-The clean body contains only the checked ruling text. The helper explicitly
-stores Arial 16 in every Word font/size slot, paragraph bidi and run RTL, full
-justification where applicable, 1.5 automatic line spacing, zero after-spacing,
-real 360-twip indentation, and real bold runs. Western U+0030–U+0039 digits and
-already-unpadded slash dates are preserved exactly.
+The selected legal template and, when available, the bound exemplar identify
+each paragraph's semantic treatment and the exact opening phrase of a
+substantive paragraph. Apply these rules with real Word paragraph and run
+formatting:
 
-After publication, reopen and render-check the DOCX with Documents before
-presenting it. Structural reopen is not visual approval. A create, reopen,
-digest, extraction, or render failure is a workflow stop. The helper creates
-drafts only and never writes an issued-rulings directory.
+- Use Arial 16 pt everywhere, including the complex-script font and size.
+- Set Arabic text and paragraphs right-to-left/bidirectional.
+- Use 1.5-line spacing within every paragraph, 0 pt before, and 8 pt after.
+  Do not add blank spacer paragraphs.
+- Use one-inch (2.54 cm) margins on all four sides.
+- Title paragraphs are centered, wholly bold, and have no first-line indent.
+- Transition paragraphs are centered, wholly bold, and have a 0.25-inch
+  (360-twip) first-line indent.
+- Substantive paragraphs are fully justified with a 0.25-inch (360-twip)
+  first-line indent; bold only that paragraph's exact opening phrase.
+- Plain paragraphs are fully justified, unbolded, and have no first-line indent.
+
+Do not simulate indentation or spacing with spaces, tabs, or blank lines. Do
+not use Markdown bold, visual-line bolding, or a first-comma heuristic. Page
+size, orientation, line width, pagination, and other host layout defaults are
+not pinned.

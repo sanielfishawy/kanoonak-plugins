@@ -22,7 +22,7 @@ from typing import Mapping, Sequence
 
 
 CONVENTION = "2026-07-21"
-PARENT_VERSION = "2026-08-26.1"
+PARENT_VERSION = "2026-08-28.1"
 DATE_TOKEN = b"{{TODAY}}"
 ASSET_DIRECTORY = Path(__file__).resolve().parents[1] / "assets" / "workspace"
 CANONICAL_ROOT_FILES = ("README.md", "أسلوبي.md")

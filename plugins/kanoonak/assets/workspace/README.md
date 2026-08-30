@@ -37,7 +37,11 @@ Kanoonak/
 استئناف-N-لسنة-YYق/
 |-- الملخص.md            (ملخص القضية — المفتاح والخصوم والطلبات والنصاب والجلسات)
 |-- المواعيد.md          (المواعيد — وأقربها القادم إلزامي الإثبات)
-|-- الوارد/              (تسليمات التصوير الخام — دفعات لا تمس ولا تحذف)
+|-- الوارد/              (تسليمات التصوير الخام — مجلد مستقل لكل صفحة، لا يمس ولا يحذف)
+|   \-- صفحة-NNNNNN-<معرف-الصفحة-الكامل>/
+|       |-- تسليم.yaml   (بيان صفحة واحدة)
+|       |-- صفحة.md     (نص OCR وهوية الصفحة)
+|       \-- صورة.jpg     (اختيارية؛ توجد فقط إذا جلبت الصورة انتقائياً)
 |-- الحكم-المستأنف/      (حكم أول درجة — المدخل الأول في كل مهمة)
 |-- الصحف/               (صحف الاستئناف وأسبابه — صحيفة لكل عضو)
 |-- المذكرات/            (المذكرات والحوافظ — مجلد لكل خصم باسمه المثبت بالملخص)
@@ -82,7 +86,7 @@ Kanoonak/
 | convention | نسخة اتفاقية المجلد | convention version |
 | case | مفتاح القضية (النوع والرقم والسنة ونوعها والمحكمة) | the case key tuple |
 | type | نوع القضية | case type |
-| number | رقم القضية | case number |
+| number | رقم القضية أو الصفحة بحسب السياق | case or page number, by context |
 | judicial_year | السنة القضائية (مع year_type: قضائية) | judicial year (2-digit) |
 | year | السنة الميلادية (مع year_type: ميلادية) | Gregorian year (4-digit) |
 | year_type | نوع السنة | year type |
@@ -101,7 +105,7 @@ Kanoonak/
 | appeal_roles | المركز في كل استئناف عضو | per-appeal roles |
 | claims | الطلبات | claims |
 | id | معرف ثابت | stable id |
-| text | نص الطلب | claim text |
+| text | نص الطلب أو اسم ملف نص الصفحة | claim text or page-text filename |
 | amount | المبلغ بالجنيه أو null لغير النقدي | amount (null if non-monetary) |
 | appeal | العضو الذي طرح به الطلب | pleading member appeal |
 | valuation | بيانات النصاب | valuation |
@@ -117,18 +121,19 @@ Kanoonak/
 | next_deadline_id | معرف قيد الميعاد الأقرب | id of that entry |
 | entries | قيود المواعيد | deadline entries |
 | kind | نوع الميعاد أو نوع المحرر | entry kind / drafted-document kind |
-| source | مصدر الإيداع أو منشئ الميعاد | source pointer |
+| source | مصدر الإيداع أو منشئ الميعاد أو كتلة مصدر تسليم الصفحة بحسب السياق | filing source, deadline origin, or page-delivery source block, by context |
 | doc_type | نوع المستند | document type |
 | party | الخصم المقدم أو null | submitting party slug, or null |
 | received | تاريخ الإيداع | date received/filed |
 | title | عنوان المستند | document title |
-| batch | معرف الدفعة | delivery-batch id |
 | delivered | وقت التسليم | delivery timestamp |
-| pages | صفحات الدفعة | delivered pages |
-| n | رقم الصفحة في البيان | page number in the manifest |
-| page | رقم الصفحة | page number |
-| captured | تاريخ الالتقاط | capture date |
+| case_id | معرف القضية في نظام التصوير | capture-system case id |
+| page_id | معرف الصفحة الكامل | full page id |
+| page | رقم الصفحة في القضية | page number in the case |
+| image | اسم ملف الصورة أو null | image filename or null |
+| captured | وقت الالتقاط | capture timestamp |
 | ocr | مصدر التعرف الضوئي | OCR source |
+| pipeline | نسخة خط التصوير | capture-pipeline version |
 | state | حالة المحرر | lifecycle state |
 | based_on | النسخة السابقة من المسودة | prior draft version |
 | supersedes | النسخة السابقة من الحكم المعدل | the superseded issued file |
@@ -155,9 +160,9 @@ Kanoonak/
 | ملف قديم اختياري | الفهرس.md | optional legacy file (not managed) |
 | ملفا القضية الإلزاميان | الملخص.md ، المواعيد.md | the two mandatory files |
 | مجلدات القضية الثمانية | الوارد ، الحكم-المستأنف ، الصحف ، المذكرات ، تقارير-الخبرة ، اللائحة ، المسودات ، الأحكام | the eight slot folders |
-| ملفات بنيوية | تسليم.yaml ، قائمة.md ، مضموم.md | structural files |
+| ملفات بنيوية | تسليم.yaml ، صفحة.md ، صورة.jpg ، قائمة.md ، مضموم.md | structural files |
 | مفردات قواعد التسمية | استئناف ، التماس ، لسنة ، و ، ق | name-grammar vocabulary |
-| بادئات أسماء الملفات المؤرخة | دفعة- ، صفحة- ، صحيفة- ، مذكرة- ، حافظة- ، مستند- ، تقرير- ، مسودة- ، حكم- ، حكم-تمهيدي- ، قرار- | dated name-class prefixes |
+| بادئات أسماء الملفات والمجلدات | صفحة- ، صحيفة- ، مذكرة- ، حافظة- ، مستند- ، تقرير- ، مسودة- ، حكم- ، حكم-تمهيدي- ، قرار- | file and folder name-class prefixes |
 | أسماء خاصة | الحكم-المستأنف.md ، صحيفة-الالتماس.md ، لائحة-<اسم-المجلد>.md ، مستند-NN-<وصف>.md ، عقد-العمل (وصف محجوز لمستند عقد العمل) | special names incl. the reserved عقد-العمل slug |
 | لاحقة التعديل | -معدل ، -معدل-2 ، -معدل-3 | amendment suffix chain |
 | نوع القضية (type) | استئناف ، التماس | case type |
@@ -210,9 +215,9 @@ Kanoonak/
 14. **H14** — اتساق التواريخ: الجلسات لا تسبق أحكام أول درجة، وجلسة كل حكم صادر من سجل جلسات الملخص، وتواريخ المواعيد لا تسبق تواريخ مصادرها.
 15. **H15** — مجلد الضم لا يحوي إلا «مضموم.md» صحيحاً يدل على مجلد جامع قائم.
 16. **H16** — يجوز ألا يوجد أي من ملفي مساحة العمل المدَارين «README.md» و«أسلوبي.md». فإن وجد أحدهما، وجب أن يوجدا معاً كملفين عاديين بالبيانات المعتمدة. وكل مجلد قضية غير مضموم يحوي العناصر العشرة كاملة، وجدول المفردات في هذا الدليل تام ويطابق القيم المعتمدة.
-17. **H17** — كل «تسليم.yaml» ذكرت قضيته يطابق مجلده، ودفعة مجهولة القضية لا تكتب في مجلد قضية قبل تثبت المساعد من القاضي.
+17. **H17** — يدقق كل «تسليم.yaml» ولو أخطئ اسم مجلده. ويجب أن يسمى مجلد التسليم «صفحة-<رقم من ست خانات على الأقل>-<معرف الصفحة الكامل>»، وأن يحوي بيان صفحة واحدة و«صفحة.md» و«صورة.jpg» إن سماها البيان. ويتطابق المجلد والبيان وكتلة الصفحة في معرفها ورقمها ووقت التقاطها ومصدر OCR ومعرف القضية، وتطابق القضية المؤكدة مجلد القضية.
 
-> **Gloss (EN):** The housekeeping audit checks: parseable folder names (H1); complete mandatory front-matter in الملخص/المواعيد incl. per-member first-instance numbers and per-party role data (H2); folder-name/summary key agreement (H3); memoranda subfolders matching party slugs (H4); identity blocks on filed documents with member-tuple and known-party checks (H5); next-deadline synchronization (H6); expert-referral entails a report-deadline entry with the two-week rule (H7); draft/issued separation (H8); no placeholder tokens in issued files (H9); intact supersedes chains (H10); an optional legacy `الفهرس.md` left unchanged and unused for case selection, folder choice, or file creation (H11); cited-لائحة presence (H12); unclassified items listed for the judge (H13); date coherence (H14); a merged-pointer folder containing only a valid pointer to an existing consolidated folder (H15); both managed root files may be absent, but if either exists both are regular files with prescribed data, while every non-merged case keeps the ten-item set and this vocabulary remains complete (H16); delivery-manifest/case agreement and no unconfirmed null-case batches (H17). The audit reports gaps; it never repairs, moves, or deletes without the judge's instruction.
+> **Gloss (EN):** The housekeeping audit checks: parseable folder names (H1); complete mandatory front-matter in الملخص/المواعيد incl. per-member first-instance numbers and per-party role data (H2); folder-name/summary key agreement (H3); memoranda subfolders matching party slugs (H4); identity blocks on filed documents with member-tuple and known-party checks (H5); next-deadline synchronization (H6); expert-referral entails a report-deadline entry with the two-week rule (H7); draft/issued separation (H8); no placeholder tokens in issued files (H9); intact supersedes chains (H10); an optional legacy `الفهرس.md` left unchanged and unused for case selection, folder choice, or file creation (H11); cited-لائحة presence (H12); unclassified items listed for the judge (H13); date coherence (H14); a merged-pointer folder containing only a valid pointer to an existing consolidated folder (H15); both managed root files may be absent, but if either exists both are regular files with prescribed data, while every non-merged case keeps the ten-item set and this vocabulary remains complete (H16); every delivery manifest, including one in a misnamed folder, must agree with its one-page folder, exact manifest, page front matter, confirmed case, required text, and optional named image (H17). The audit reports gaps; it never repairs, moves, or deletes without the judge's instruction.
 
 ## 8. نسخة الاتفاقية — Convention version
 
