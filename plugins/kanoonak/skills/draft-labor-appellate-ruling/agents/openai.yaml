@@ -1,4 +1,0 @@
-interface:
-  display_name: "Draft Labor Appellate Ruling"
-  short_description: "Draft neutral labor-appellate rulings"
-  default_prompt: "$draft-labor-appellate-ruling Prepare and check this labor-appellate ruling request."

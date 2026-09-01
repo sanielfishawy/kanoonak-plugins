@@ -1,4 +1,0 @@
-interface:
-  display_name: "Open Kanoonak Case"
-  short_description: "Prepare Kanoonak cases with readiness checks"
-  default_prompt: "$open-kanoonak-case Prepare this authenticated Kanoonak case and report readiness gaps."
