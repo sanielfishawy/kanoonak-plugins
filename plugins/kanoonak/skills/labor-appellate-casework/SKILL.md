@@ -44,13 +44,16 @@ Advance only as far as the request requires. A preparation or inspection
 request may stop during Stage 1. A drafting or revision request must first
 refresh or complete Stage 1, then complete every required downstream stage.
 
-1. **Prepare and understand the case.** Read
-   [case-preparation.md](references/case-preparation.md). Create or reconnect
-   the local record only under
-   [local-case-record.md](references/local-case-record.md) when local writing
-   is available and confirmed. Acquire the complete available source,
-   reconstruct the logical record, review it substantively, and maintain the
-   source-anchored brief.
+1. **Prepare and understand the case.** After the case is selected and before
+   retrieving or reviewing its contents, read
+   [local-case-record.md](references/local-case-record.md). Prove the attached
+   parent, show the exact case folder, obtain the first-save confirmation, and
+   create or reconnect the local record. If the parent cannot be proved or the
+   save is not confirmed, follow that reference's exact guidance and stop case
+   work. Then read [case-preparation.md](references/case-preparation.md),
+   acquire the complete available source, reconstruct the logical record,
+   review it substantively, and maintain the source-anchored brief as the work
+   proceeds.
 2. **Research governing law.** Apply the method in
    [the legal-research skill](../legal-research/SKILL.md) to the relevant
    legislation and Court of Cassation authority. If the judge later chooses an

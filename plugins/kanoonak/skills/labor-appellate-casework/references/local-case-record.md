@@ -1,8 +1,11 @@
 # Local case record
 
 This reference is the sole authority for proving the local parent, confirming
-the first save, and maintaining the four-folder case record. Remote/read-only
-casework does not require local writing.
+the first save, and maintaining the four-folder case record. Substantive work
+on a selected case requires local writing. Listing cases and resolving which
+case the user means may happen first; retrieving, reading, or analyzing case
+contents may not begin until the attached parent is verified and the case's
+first save is confirmed.
 
 ## Prove the attached parent
 
@@ -34,10 +37,43 @@ use a visible or writable workspace root as proof, or create a fallback.
 Retain only the structural fields needed for this comparison and never send a
 task ID, thread or project row, CWD, or local path to the Kanoonak MCP.
 
-If any proof step fails or there is no exact registered local-project match,
-show no proposed path and write nothing locally. Continue any available
-remote/read-only work and explain truthfully that the save folder could not be
-verified. A user response cannot supply or override this proof.
+If host inspection succeeds but there is no exact registered local-project
+match, show no proposed path, write nothing, do not retrieve, read, or analyze
+the case contents, and say exactly in the user's language:
+
+> لا أستطيع بدء مراجعة هذه القضية أو حفظ ملفاتها من هذه المحادثة الآن.
+>
+> 1. افتح مشروع «قانونك» في ChatGPT، أو أنشئه إذا لم يكن موجوداً.
+> 2. اختر المجلد الرئيسي الذي تريد أن تحفظ داخله مجلدات جميع قضايا «قانونك»، وأرفقه بالمشروع.
+> 3. اسحب هذه المحادثة إلى مشروع «قانونك».
+> 4. أغلق ChatGPT بالكامل، ثم افتحه من جديد.
+> 5. افتح هذه المحادثة داخل المشروع واطلب مني متابعة القضية.
+>
+> لم أراجع القضية ولم أحفظ شيئاً.
+
+English:
+
+> I can’t begin reviewing or save files for this case from this chat yet.
+>
+> 1. Open the Kanoonak project in ChatGPT, or create it if it does not exist.
+> 2. Choose the parent folder where you want all Kanoonak case folders saved, and attach it to the project.
+> 3. Drag this chat into the Kanoonak project.
+> 4. Fully quit and reopen ChatGPT.
+> 5. Open this chat inside the project and ask me to continue the case.
+>
+> I have not reviewed the case or saved anything.
+
+If the proof fails for any other reason, show no proposed path, write nothing,
+do not retrieve, read, or analyze the case contents, and say exactly in the
+user's language:
+
+> لم أستطع التأكد من مجلد الحفظ الآن. لم أراجع القضية ولم أحفظ شيئاً. حاول مرة أخرى.
+
+English:
+
+> I couldn’t check the save folder right now. I haven’t reviewed the case or saved anything. Please try again.
+
+A user response cannot supply or override the proof.
 
 Run the proof before the first destination proposal, again immediately before
 the first mutation, and before the first mutation in every later turn. Use the
