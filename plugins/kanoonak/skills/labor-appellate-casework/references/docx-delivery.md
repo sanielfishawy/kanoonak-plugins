@@ -9,16 +9,25 @@ confirmation.
 
 Keep every initial or revised ruling visible in chat. When its verified local
 case folder is available, use the host Documents capability to create an
-editable DOCX automatically at:
+editable DOCX automatically at the path established for the case's naming
+convention:
 
-`Output/الحكم الحالي.docx`
+- Arabic default: `الأحكام/الحكم الحالي.docx`.
+- Explicit English: `Output/current-ruling.docx`.
+
+For an existing case, its exact current-file and archive paths already on disk
+control instead. In particular, continue the 0.2.2 paths
+`Output/الحكم الحالي.docx` and `Output/النسخ السابقة/` without migration or a
+parallel current file.
 
 Before replacing an existing current file, move it to the next unused archive
-name under `Output/النسخ السابقة/`: `الحكم 01.docx`, then `الحكم 02.docx`, and
-so on. Use at least two digits for 1–99, continue with the next positive
-integer without an artificial cap, never overwrite an archive, and never
-delete a prior version. “Current” is deliberate because the judge may revise
-the ruling later.
+name for that same convention: `الأحكام/النسخ السابقة/الحكم 01.docx`, then
+`الحكم 02.docx`, and so on by default; or
+`Output/previous-versions/ruling-01.docx`, then `ruling-02.docx`, and so on in
+explicit-English cases. Use at least two digits for 1–99, continue with the
+next positive integer without an artificial cap, never overwrite an archive,
+and never delete a prior version. “Current” is deliberate because the judge
+may revise the ruling later.
 
 If the verified parent is unavailable, keep the full ruling visible in chat
 and report that it was not saved locally. If DOCX creation fails, keep the full
@@ -56,6 +65,10 @@ delivery commentary inside the ruling.
 - plain paragraphs fully justified, unbolded, and unindented; and
 - genuine Word formatting rather than spaces, tabs, blank lines, Markdown
   bolding, visual-line bolding, or a first-comma heuristic.
+
+The title block ends with the hearing-date paragraph. The immediately
+following procedural-opening paragraph is a separate paragraph role and must
+not inherit the title block's centering or underline.
 
 These are paragraph roles, not visual lines; wrapping in Word does not create
 another role.

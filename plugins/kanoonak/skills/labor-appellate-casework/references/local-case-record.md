@@ -1,9 +1,10 @@
 # Local case record
 
-This reference is the sole authority for proving the local parent, confirming
-the first save, and maintaining the four-folder case record. Substantive work
-on a selected case requires local writing. Listing cases and resolving which
-case the user means may happen first; retrieving, reading, or analyzing case
+This reference is the sole authority for proving the local parent, choosing the
+case-record naming convention, confirming the first save, maintaining the
+four-folder case record, and synchronizing the task title. Substantive work on
+a selected case requires local writing. Listing cases and resolving which case
+the user means may happen first; retrieving, reading, or analyzing case
 contents may not begin until the attached parent is verified and the case's
 first save is confirmed.
 
@@ -83,47 +84,66 @@ changes.
 
 ## Confirm the first save
 
-Choose one filesystem-safe case leaf from the selected authenticated case's
-human-readable name, confined as a direct child of the verified parent. Do not
-derive it from a chat-supplied path. Before the first local save for that case
-in this chat, show the exact full case folder and ask exactly:
+Before deriving a new leaf, inspect only the direct-child folder names under the
+verified parent. If exactly one clearly corresponds to the authenticated case,
+select its exact existing leaf and paths. If several are
+plausible, ask the user to choose among those shown children; never accept an
+arbitrary path or open their contents before confirmation. Preserve every
+existing convention, including the 0.2.2 `Source/`, `Record/`, `Work/`, and
+`Output/` layout, without switching, renaming, or migrating it.
 
+If no existing folder is selected, use Arabic names by default regardless of conversation
+language; use English only when explicitly requested before the first save. Choose one
+filesystem-safe leaf from the authenticated case's human-readable name. By default use its
+reliable Arabic name; if none is available, ask rather than guessing or translating party names.
+
+For either an existing or new destination, before opening case contents or making the first local save, show the exact full case folder and ask exactly:
 > Save this case here?
 
-Only a clear affirmative answer in the current chat confirms the save. One
-affirmative answer covers later saves for that same case in the same chat while
-the authenticated case, verified parent, and exact destination remain
-unchanged. A decline, unclear answer, case switch, identity change, parent
-change, or destination change means write nothing until the current
-destination is proved and confirmed again.
+One clear affirmative answer in the current chat confirms later saves while
+the case, parent, and destination remain unchanged. A decline, unclear answer,
+case switch, identity change, parent change, or destination change means write
+nothing until the current destination is proved and confirmed again.
 
 ## Maintain the record
 
-The case folder contains this record and no root bootstrap, workspace guide,
-case schema, lifecycle state, taxonomy, or validator:
+A new case folder contains exactly this four-folder record. Use the Arabic
+column by default and the English column only when explicitly requested:
 
-```text
-<verified parent>/<case>/
-├── Source/
-├── Record/
-├── Work/
-└── Output/
-    └── النسخ السابقة/
-```
+| Purpose | Arabic default | Explicit English |
+|---|---|---|
+| Case folder | `<اسم القضية>/` | `<Case Name>/` |
+| Source | `المصادر/` | `Source/` |
+| Record | `سجل القضية/` | `Record/` |
+| Work | `ملفات العمل/` | `Work/` |
+| Brief | `ملفات العمل/ملخص القضية.md` | `Work/case-brief.md` |
+| Decision | `ملفات العمل/النتيجة القضائية المختارة.md` | `Work/decision.md` |
+| Research | `ملفات العمل/البحث القانوني.md` | `Work/research.md` |
+| Exemplars | `ملفات العمل/الأحكام الاسترشادية المختارة.md` | `Work/exemplars.md` |
+| Output | `الأحكام/` | `Output/` |
 
-- `Source/` contains original captured files, every page image, and raw OCR as
-  received. Append new material and preserve apparent duplicates.
-- `Record/` contains source-linked logical documents reconstructed from the
-  pages. A duplicate may be excluded from reconstruction without being deleted
-  from `Source/`.
-- `Work/` contains `case-brief.md`, `decision.md`, `research.md`, and
-  `exemplars.md`, created or updated only when their stage produces useful
-  work. Do not create a generic review-notes or workflow-state file.
-- `Output/` contains the current editable ruling and its automatically archived
-  prior DOCX versions under `النسخ السابقة/`. The DOCX reference alone owns
-  their names and replacement procedure.
+The source folder contains original captured files, every page image, and raw OCR. Preserve each original source filename, append material, and preserve
+apparent duplicates. Kanoonak-created pages or text use `الصفحة 001.jpg` or
+`النص الخام للصفحة 001.txt` by default, or concise English names in
+explicit-English cases. The record folder contains source-linked logical
+documents reconstructed from the pages; use short names such as
+`الحكم المستأنف.md` and `صحيفة الاستئناف.md`, or concise English equivalents.
+A duplicate may be omitted from reconstruction but not deleted from source.
 
-Write useful results incrementally: acquisition updates `Source/`,
-reconstruction updates `Record/`, analysis and choices update `Work/`, and a
-ruling revision updates `Output/`. Files show what work exists; do not add a
-counter, status ledger, preflight record, sidecar, or compatibility file.
+Create work files only when their stage produces useful work. The DOCX
+reference alone owns ruling replacement and archive numbering. Add no root
+bootstrap, workspace guide, case schema, lifecycle state, taxonomy, validator,
+generic notes, counter, ledger, sidecar, naming-preference, or compatibility
+file. The existing files show current state. Write each useful result incrementally to its established case folder.
+
+## Synchronize the task title
+
+Listing, disambiguation, selection, destination proposal, and confirmation do
+not trigger a rename. After the first substantive case-specific write succeeds
+in any established case subfolder, immediately rename the current ChatGPT task
+to the exact filesystem-safe case-folder leaf. Perform this rename once per
+ChatGPT task. Do not abbreviate, translate, embellish, or regenerate that sole
+source of truth.
+The one-case-per-task binding remains unchanged. If the host cannot rename the
+task, state the exact title the user should apply and continue; never discard,
+delay, or mislabel case materials because renaming was unavailable.

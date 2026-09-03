@@ -30,10 +30,11 @@ check here.
 4. Assess what each retrieved text actually establishes, its relevance to the
    question, and any material limit on applying it. Do not turn a party's
    position or a search result into law.
-5. Record the useful holdings, citations, and their application in
-   `Work/research.md` when research belongs to a prepared case. For an
-   independent request, return the same source-grounded analysis in the form
-   the user requested.
+5. When research belongs to a prepared case, record the useful holdings,
+   citations, and their application in the research file established by
+   [the local-case-record rules](../labor-appellate-casework/references/local-case-record.md).
+   For an independent request, return the same source-grounded analysis in the
+   form the user requested.
 
 Retrieve and review the actual legal text before relying on it. Preserve
 truthful uncertainty when the served sources do not answer the question. Add

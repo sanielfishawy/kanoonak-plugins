@@ -17,8 +17,8 @@ facts, governing law, or the judicial choice.
    verify that the returned `doc_id` exactly matches the index entry before
    using it.
 4. Record each selected ruling's identity and, when useful, one short reason in
-   `Work/exemplars.md`. Do not copy the complete index or full ruling text into
-   that file.
+   the exemplars file established under the local-record rules. Do not copy the
+   complete index or full ruling text into that file.
 5. Draft from the case record and reviewed law. Use the verified selected
    exemplars only for appropriate structure and style.
 

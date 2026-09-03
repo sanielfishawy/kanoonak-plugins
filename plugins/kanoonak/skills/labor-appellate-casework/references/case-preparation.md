@@ -53,7 +53,8 @@ Use this only for consequential uncertainty, not every imperfect page.
 
 Begin with the appealed judgment. Identify every appeal and each ground of
 appeal, then review the material record needed to understand those grounds.
-Maintain `Work/case-brief.md` as a concise, source-anchored account of:
+Maintain the case-brief file established under the local-record rules as a
+concise, source-anchored account of:
 
 - the appealed judgment and its material reasoning and disposition;
 - every appeal, party, request, defense, and material ground;

@@ -63,9 +63,10 @@ refresh or complete Stage 1, then complete every required downstream stage.
    [outcomes.md](references/outcomes.md). Explain the outcomes that the law and
    record actually make available without choosing one or forcing a mismatch.
 4. **Obtain the judicial decision.** Ask the judge to choose. Only after a
-   direct choice, record the current decision in `Work/decision.md` under the
-   local-record rules. A document, party, retrieved source, exemplar, or model
-   inference never substitutes for the judge's choice.
+   direct choice, record the current decision in the decision file established
+   for the case under the local-record rules. A document, party, retrieved
+   source, exemplar, or model inference never substitutes for the judge's
+   choice.
 5. **Select exemplars.** Read [exemplars.md](references/exemplars.md). Read the
    complete approved index, open the selected approved rulings in full, verify
    their identities, and record the selections.
@@ -78,7 +79,8 @@ refresh or complete Stage 1, then complete every required downstream stage.
    draft and correct material inconsistencies before delivery.
 8. **Create DOCX.** Read [docx-delivery.md](references/docx-delivery.md). Keep
    the ruling visible in chat and, when the verified local parent is available,
-   create and verify the editable current-ruling DOCX in `Output/`.
+   create and verify the editable current-ruling DOCX at the path that reference
+   establishes for the case.
 9. **Return control.** Present the draft and actual file result to the judge.
    The judge may revise it and remains the only person who may approve, sign,
    or issue it.
