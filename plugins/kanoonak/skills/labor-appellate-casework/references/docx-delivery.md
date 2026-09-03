@@ -43,25 +43,58 @@ delivery commentary inside the ruling.
 - right-to-left and bidi paragraph/run behavior;
 - 1.5 line spacing, 0 points before, 8 points after, and no spacer paragraphs;
 - 1-inch (2.54 cm) margins on all four sides;
-- titles centered, wholly bold, with no first-line indent;
-- transition paragraphs centered and wholly bold, with a 0.25-inch first-line
-  (360-twip) indent;
+- the opening title-block paragraphs — court, circuit, draft label, appeal
+  identity, and hearing date — centered, wholly bold, underlined, and with no
+  first-line indent;
+- the opening procedural paragraph, such as
+  `بعد سماع المرافعة ومطالعة الأوراق والمداولة قانوناً:`, physically
+  right-aligned using logical-start paragraph alignment
+  (`<w:jc w:val="start"/>`), wholly bold, not underlined, and with a 0.25-inch
+  (360-twip) first-line indent from the right;
 - substantive paragraphs fully justified with a 0.25-inch first-line indent
   and only their exact opening phrase bold; the indent is 360 twips;
 - plain paragraphs fully justified, unbolded, and unindented; and
 - genuine Word formatting rather than spaces, tabs, blank lines, Markdown
   bolding, visual-line bolding, or a first-comma heuristic.
 
+These are paragraph roles, not visual lines; wrapping in Word does not create
+another role.
+
+For every Arabic/RTL run, apply right-to-left run behavior. When the run is
+intended to be bold, apply both ordinary bold and complex-script bold
+(`<w:b/>` and `<w:bCs/>`) together with `<w:rtl/>`. When it is intended not to
+be bold, explicitly disable both bold properties so bold is not inherited.
+
 Page size, orientation, line width, pagination, and other host-layout defaults
 remain unpinned. The selected exemplar and the ruling's actual structure
-identify each paragraph treatment and the exact opening phrase; do not create a
-fixed template, module bank, paragraph classifier, or formatting heuristic.
+identify the treatment of the remaining substantive and plain paragraphs and
+the exact substantive opening phrase; they do not override the fixed opening
+title-block and procedural roles. Do not create a fixed template, module bank,
+paragraph classifier, or formatting heuristic.
 
 ## Verify before reporting success
 
-Reopen or render the DOCX and verify that it is editable, complete, readable,
-text-exact, and formatted as required. Inspect Western digits, unpadded dates,
-all four paragraph roles, margins, spacing, indents, bidi behavior, font, size,
-and exact bold boundaries. If verification exposes a content error, correct
-the ruling text first, recreate the file, and verify again. Report only the
-file result actually achieved.
+Reopen the DOCX and verify that it is editable, complete, readable, text-exact,
+and formatted as required. Before delivery, reopen the saved DOCX and perform a
+targeted RTL-format audit. Confirm that every Arabic paragraph has `<w:bidi/>`
+in valid paragraph-property order before spacing, indentation, and alignment;
+every Arabic/RTL run has `<w:rtl/>`; bold Arabic has both `<w:b/>` and
+`<w:bCs/>`; and non-bold Arabic explicitly disables both. Use logical-start
+alignment and a 360-twip first-line indent for the opening procedural paragraph.
+Never position text with spaces or tabs.
+
+Render and visually review every page of the completed document for Western
+digits, unpadded dates, all four paragraph roles — including the opening title
+block and procedural paragraph — margins, spacing, indents, bidi behavior,
+font, size, underline treatment, and exact bold boundaries. ChatGPT's rendered
+preview is not Microsoft Word and must never be described as Word verification.
+
+When desktop Microsoft Word and Computer Use are available, open the exact
+saved DOCX in Word using Print Layout and inspect every page. Treat Word as the
+visual authority. Any repair warning or formatting discrepancy is a failed
+check: close Word, correct or recreate the DOCX, and repeat the structural and
+Word inspections.
+
+If verification exposes a content error, correct the ruling text first,
+recreate the file, and verify again. Report only the checks actually completed
+and the file result achieved.

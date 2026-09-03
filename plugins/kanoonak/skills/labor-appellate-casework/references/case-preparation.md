@@ -43,6 +43,12 @@ a full page only when needed to locate or understand that issue. Record the
 source and unresolved uncertainty, but create no readiness score, image-review
 label, mandatory visual census, or requirement to correct every OCR line.
 
+If, after targeted image inspection, a captured page remains unclear enough to
+materially impair an accurate case brief or another dependent stage, directly
+ask the judge to recapture it, state its captured page number, and show the full
+captured-page image with the request; do not leave the issue only in the brief.
+Use this only for consequential uncertainty, not every imperfect page.
+
 ## Understand the case
 
 Begin with the appealed judgment. Identify every appeal and each ground of

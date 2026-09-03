@@ -24,6 +24,15 @@ the court's findings distinct from party submissions. The judge's current
 choice controls the disposition; never infer, supplement, or silently change
 it.
 
+Present every distinct ground of appeal in its own numbered paragraph. For
+each ground, state with brevity that preserves its meaning the appellant's
+specific complaint, the alleged factual or legal error in the appealed
+judgment, and the essential basis supporting the complaint. Never collapse
+distinct grounds into a general summary or abbreviate a ground so far that its
+substance becomes unclear. This requirement controls when an exemplar groups
+or over-compresses the grounds differently. It applies even when only one
+ground is stated.
+
 Western digits means Unicode U+0030–U+0039. Write a date such as `7/6/2026`,
 not `07/06/2026`. Leave an unresolved required value visibly bracketed instead
 of guessing it.
