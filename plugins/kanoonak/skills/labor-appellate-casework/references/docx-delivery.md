@@ -87,26 +87,14 @@ paragraph classifier, or formatting heuristic.
 
 ## Verify before reporting success
 
-Reopen the DOCX and verify that it is editable, complete, readable, text-exact,
-and formatted as required. Before delivery, reopen the saved DOCX and perform a
-targeted RTL-format audit. Confirm that every Arabic paragraph has `<w:bidi/>`
-in valid paragraph-property order before spacing, indentation, and alignment;
-every Arabic/RTL run has `<w:rtl/>`; bold Arabic has both `<w:b/>` and
-`<w:bCs/>`; and non-bold Arabic explicitly disables both. Use logical-start
+Before delivery, reopen the saved DOCX and verify that it is editable, complete,
+text-exact, and that its document properties match the formatting rules above.
+Perform a targeted RTL-format audit: confirm that every Arabic paragraph has
+`<w:bidi/>` in valid paragraph-property order before spacing, indentation, and
+alignment; every Arabic/RTL run has `<w:rtl/>`; bold Arabic has both `<w:b/>`
+and `<w:bCs/>`; and non-bold Arabic explicitly disables both. Use logical-start
 alignment and a 360-twip first-line indent for the opening procedural paragraph.
 Never position text with spaces or tabs.
-
-Render and visually review every page of the completed document for Western
-digits, unpadded dates, all four paragraph roles — including the opening title
-block and procedural paragraph — margins, spacing, indents, bidi behavior,
-font, size, underline treatment, and exact bold boundaries. ChatGPT's rendered
-preview is not Microsoft Word and must never be described as Word verification.
-
-When desktop Microsoft Word and Computer Use are available, open the exact
-saved DOCX in Word using Print Layout and inspect every page. Treat Word as the
-visual authority. Any repair warning or formatting discrepancy is a failed
-check: close Word, correct or recreate the DOCX, and repeat the structural and
-Word inspections.
 
 If verification exposes a content error, correct the ruling text first,
 recreate the file, and verify again. Report only the checks actually completed
