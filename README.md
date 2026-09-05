@@ -26,7 +26,7 @@ Each user signs in separately. A dedicated identity is isolated, so cases belong
 
 This marketplace tracks `main`. To receive an update, fully quit and reopen Codex, then open a fresh task and check the loaded Kanoonak version and inventory there. An existing task may retain the version it loaded. No update button is expected. Kanoonak also checks the exact plugin/server compatibility at the start of work; if it reports a mismatch, complete the same quit-and-reopen step before trying again.
 
-If the version is still old after a complete restart and a fresh task, use this last-resort recovery: remove and re-add the same marketplace with the Source, Git ref, and empty Sparse paths shown above; reinstall Kanoonak; and sign in again if prompted. This can require a new connection code. Removing or reinstalling the plugin does not delete Kanoonak case data.
+If the version is still old after a complete restart and a fresh task, use this last-resort recovery: remove and re-add the same marketplace with the Source, Git ref, and empty Sparse paths shown above; reinstall Kanoonak. Sign in again when prompted. Removing or reinstalling the plugin does not delete Kanoonak case data.
 
 ## Remove
 
