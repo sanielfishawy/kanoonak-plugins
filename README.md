@@ -1,6 +1,6 @@
 # Kanoonak
 
-Kanoonak adds one authenticated Egyptian labor-appellate casework lifecycle and one independently usable Egyptian legal-research skill to your AI app. They use your own private Kanoonak account through the stable remote service at https://kanoonak-mcp.com/mcp.
+Kanoonak adds one authenticated Egyptian labor-appellate casework lifecycle and one independently usable Egyptian legal-research skill to your AI app. They use your own private Kanoonak account through the stable remote service at https://mcp.kanoonak.com/mcp.
 
 ## Install
 
