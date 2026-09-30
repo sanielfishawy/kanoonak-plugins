@@ -26,17 +26,31 @@ a Kanoonak session; that does not activate the casework lifecycle.
 
 ## Case scope and binding
 
-Before selection, `list_cases` may be used to list or discuss captures by their
-human-readable case names. Keep stable server identities internal. Listing
-does not bind the chat, and no case is selected automatically merely because
-it is the only listed or apparently ready case. Resolve an ambiguous name with
-ordinary clarification.
+Use `list_cases` to list or identify captures by their human-readable case
+names. Keep stable server identities internal. A general request to list
+available cases does not select one, even if it is the only listed or
+apparently ready case. Resolve ambiguity with ordinary clarification.
 
-Substantive preparation binds the chat to one unambiguous authenticated case.
-Derive the binding from the selected server case, never from a path or a local
-folder. Multiple chats may work on that same case because the local files are
-the durable record. If the user asks to work substantively on another case,
-ask them to use a different chat; never switch the bound case silently.
+In a fresh, unbound context, if the user says a new case was uploaded, names a
+case, or asks you to identify a particular case—including asking for the name
+of a newly uploaded or newest case—and exactly one authenticated case is
+identified, ask the following before retrieving or reviewing its contents:
+
+> وجدت القضية «[اسم القضية]». هل تريد مني إعداد ملخص للقضية؟
+
+English:
+
+> I found the case “[case name].” Would you like me to prepare a case brief?
+
+The offer itself does not bind the context. Only a clear affirmative answer
+begins substantive preparation and binding. Derive the binding from the
+selected server case, never from a path or local folder. One authenticated
+server case has one permanent canonical context; once dedicated,
+a context never switches cases. Use the routing, binding, and task-naming rules
+in the local-record reference before substantive work, including when another
+context already owns the case. Do not repeat this first prompt after routing into an
+existing canonical context or when resuming one; its durable files establish
+the completed stage and only the next incomplete prompt is offered.
 
 ## Nine stages
 
@@ -44,29 +58,42 @@ Advance only as far as the request requires. A preparation or inspection
 request may stop during Stage 1. A drafting or revision request must first
 refresh or complete Stage 1, then complete every required downstream stage.
 
-1. **Prepare and understand the case.** After the case is selected and before
-   retrieving or reviewing its contents, read
-   [local-case-record.md](references/local-case-record.md). Prove the attached
-   parent, show the exact case folder, obtain the first-save confirmation, and
-   create or reconnect the local record. If the parent cannot be proved or the
-   save is not confirmed, follow that reference's exact guidance and stop case
-   work. Then read [case-preparation.md](references/case-preparation.md),
-   acquire the complete available source, reconstruct the logical record,
-   review it substantively, and maintain the source-anchored brief as the work
-   proceeds.
-2. **Research governing law.** Apply the method in
+1. **Prepare and understand the case.** After the case is selected and the
+   first prompt is accepted, follow
+   [local-case-record.md](references/local-case-record.md) through its single
+   Stage 1 gate. After that gate completes, read
+   [case-preparation.md](references/case-preparation.md), acquire the complete
+   available source, reconstruct the logical record, review it substantively,
+   and maintain the source-anchored brief as the work proceeds. After the
+   completed brief is saved and opened under the
+   local-record rules, ask in the user's language exactly:
+
+   > أعددت ملخص القضية. هل تريد مني بحث القانون واجب التطبيق، وتطبيقه على الأدلة، وعرض خيارات الحكم؟
+
+   English:
+
+   > I’ve prepared the case brief. Would you like me to research the applicable law, apply it to the evidence, and present the ruling options?
+
+   Only a clear affirmative answer begins Stages 2 and 3.
+2. **Research governing law.** After that affirmative answer, apply the method in
    [the legal-research skill](../legal-research/SKILL.md) to the relevant
    legislation and Court of Cassation authority. If the judge later chooses an
    outcome that overturns the lower-court judgment, perform any further focused
    research needed before drafting.
 3. **Present available outcomes.** Read
-   [outcomes.md](references/outcomes.md). Explain the outcomes that the law and
-   record actually make available without choosing one or forcing a mismatch.
-4. **Obtain the judicial decision.** Ask the judge to choose. Only after a
-   direct choice, record the current decision in the decision file established
-   for the case under the local-record rules. A document, party, retrieved
-   source, exemplar, or model inference never substitutes for the judge's
-   choice.
+   [outcomes.md](references/outcomes.md). Prepare the research and options in
+   the same approved step, persist and present them under the local-record
+   rules, then ask in the user's language exactly:
+
+   > يرجى إخباري بالحكم الذي تفضله، وسأعدّه.
+
+   English:
+
+   > Please tell me which ruling you prefer, and I’ll prepare it.
+4. **Obtain the judicial decision.** Only a direct choice answers the third
+   prompt. Record it in the decision file established under the local-record
+   rules. An unclear answer, document, party, retrieved source, exemplar, or
+   model inference never selects an outcome or authorizes ruling preparation.
 5. **Select exemplars.** Read [exemplars.md](references/exemplars.md). Read the
    complete approved index, open the selected approved rulings in full, verify
    their identities, and record the selections.
@@ -81,17 +108,19 @@ refresh or complete Stage 1, then complete every required downstream stage.
    the ruling visible in chat and, when the verified local parent is available,
    create and verify the editable current-ruling DOCX at the path that reference
    establishes for the case.
-9. **Return control.** Present the draft and actual file result to the judge.
-   The judge may revise it and remains the only person who may approve, sign,
-   or issue it.
+9. **Return control.** Deliver the verified ruling through the pane and current
+   Word link required by the DOCX reference. The judge may revise it and
+   remains the only person who may approve, sign, or issue it.
 
 ## Refresh and re-entry
 
 At the start or resumption of case work, after new material arrives, and before
 any stage that depends on a complete record, refresh the source and derive the
-current state from the files rather than from chat memory. Continue work that
-the available record supports and pause only work that depends on what is
-missing.
+current state from the canonical context's files rather than from chat memory.
+Follow the local-record resumption rules: open the relevant saved artifacts,
+state the completed stage, and offer only the next incomplete step. Continue
+work that the available record supports and pause only work that depends on
+what is missing.
 
 New material returns the workflow to Stage 1 and repeats every downstream
 stage it could affect. If it could affect the judicial decision, show what

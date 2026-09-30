@@ -7,11 +7,8 @@ written.
 
 ## Acquire and preserve the source
 
-Use `list_cases` to select the judge's unambiguous authenticated capture, then
-fetch every page made available for that case with `get_document`. Start at the
-first returned text range and follow every pagination continuation until none
-remains. Match returned pages to the selected case and identify any page or
-range the service did not make available.
+Acquire the complete available source for the selected case through the
+authenticated Kanoonak connection, and identify any unavailable page or range.
 
 Preserve original captured files, every page image, and raw OCR exactly as
 received when those materials are available. Append later uploads. Apparent

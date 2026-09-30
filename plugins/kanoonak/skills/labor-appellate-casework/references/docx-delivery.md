@@ -87,15 +87,29 @@ paragraph classifier, or formatting heuristic.
 
 ## Verify before reporting success
 
-Before delivery, reopen the saved DOCX and verify that it is editable, complete,
-text-exact, and that its document properties match the formatting rules above.
-Perform a targeted RTL-format audit: confirm that every Arabic paragraph has
-`<w:bidi/>` in valid paragraph-property order before spacing, indentation, and
-alignment; every Arabic/RTL run has `<w:rtl/>`; bold Arabic has both `<w:b/>`
-and `<w:bCs/>`; and non-bold Arabic explicitly disables both. Use logical-start
-alignment and a 360-twip first-line indent for the opening procedural paragraph.
-Never position text with spaces or tabs.
+Before delivery, use the host's available document capabilities to check that
+the saved DOCX is editable, complete, text-exact, and follows the formatting
+rules above. Correct any defect those checks reveal. Report only the checks
+actually completed; do not delay delivery to pursue verification the host does
+not provide.
 
-If verification exposes a content error, correct the ruling text first,
-recreate the file, and verify again. Report only the checks actually completed
-and the file result achieved.
+## Open and link only the verified current ruling
+
+After completing the available verification above, keep the full ruling visible
+in chat, open that exact current DOCX visibly in the right pane, and add one
+standard Markdown link whose target is its exact absolute local path:
+
+- Arabic default label: `افتح الحكم في Word`.
+- Explicit-English label: `Open the ruling in Word`.
+
+Never link or report success for a placeholder, stale, missing, or unchecked
+file. If the checked file exists but opening the pane fails, preserve it,
+provide its current link, and report only the pane failure. The link exposes the
+local file; the operating system's configured file handler—not the plugin—
+determines which installed application opens it.
+
+For a revision, first archive the prior current ruling under the rules above.
+Then recreate and verify the revision at the same current path. Refresh or
+replace the existing ruling pane rather than intentionally opening a duplicate,
+and provide only a new link to that verified current file—never to an archive or
+superseded version.
