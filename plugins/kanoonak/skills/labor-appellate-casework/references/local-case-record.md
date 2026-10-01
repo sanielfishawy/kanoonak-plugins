@@ -20,14 +20,21 @@ destination is confirmed.
 
 ## Prove the attached parent
 
-Before substantive casework, verify that the current task is inside a local
-Kanoonak project whose attached folder is the intended parent for Kanoonak case
-folders. Use that verified attached folder as the parent. Do not accept a path
-merely supplied in chat or send host or project metadata to Kanoonak.
+Before substantive casework, establish one unambiguous attached local folder as
+the Kanoonak case parent for the current task. Use the available host evidence
+as a whole. Missing or incomplete host metadata does not defeat an otherwise
+established attachment. Use that verified attached folder as the parent. Do not
+accept a path merely supplied in chat or send host or project metadata to
+Kanoonak.
 
-If host inspection succeeds but there is no exact registered local-project
-match, show no proposed path, write nothing, do not retrieve, read, or analyze
-the case contents, and say exactly in the user's language:
+If the available host evidence positively identifies a different project or
+folder, show no proposed path, write nothing, do not retrieve, read, or analyze
+the case contents, explain the exact conflict in the user's language, and stop.
+Missing metadata alone is not a conflict.
+
+If the attached parent cannot otherwise be established, show no proposed path,
+write nothing, do not retrieve, read, or analyze the case contents, and say
+exactly in the user's language:
 
 > لا أستطيع مراجعة هذه القضية أو حفظ ملفاتها من هذه المحادثة.
 >
@@ -66,12 +73,12 @@ before the first local write in each later turn.
 
 ## Route one canonical context
 
-Before substantive casework, identify the unique task associated with the
-selected authenticated server case in the current project. If the current task
-is already canonical, continue here. If another task is uniquely canonical,
-direct the user there and continue the case only there. Do not bind or rename
-the current task, and do not review or save the case here. State that nothing
-was reviewed or saved here and that the duplicate task may be archived; never
+Before substantive casework, within the verified attached parent, identify the
+unique task associated with the selected authenticated server case. If the
+current task is already canonical, continue here. If another task is uniquely
+canonical, direct the user there and continue the case only there. Do not bind
+or rename the current task, and do not review or save the case here. State that
+nothing was reviewed or saved here and that the duplicate task may be archived; never
 archive it automatically. If no canonical task exists, associate the current
 unbound task. Never switch a task already associated with another case. If the
 association is ambiguous, stop and explain the ambiguity. The authenticated
