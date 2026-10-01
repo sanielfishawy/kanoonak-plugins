@@ -102,15 +102,18 @@ nothing, and prepare no case brief. Explain the specific gap and ask for the
 identifying or clarifying material needed. When new material arrives, resume
 the same authenticated case and canonical context.
 
-The Capture name identifies the uploaded case but does not establish its legal
-identity and must not supply a task title or new folder name.
+The Capture name identifies the uploaded case but is not evidence of its legal
+identity. Establish the identity from authenticated case material. When that
+material verifies an appeal number and judicial year, use that verified appeal
+identifier as the concise task title and new folder name, even if it matches
+the Capture name. Do not replace an available verified appeal identifier with
+a description based on the parties or subject matter.
 
-Once the legal identity is clear, ensure that the current canonical task has a
-concise case-specific title derived from that identity before first-save
-confirmation. Preserve a user-chosen title or an accurate record-derived
-case-specific title; otherwise replace a generic, Capture-derived, or inaccurate
-title. Verify that the displayed title still identifies the same case without
-requiring character-for-character equality.
+Before first-save confirmation, ensure that the current canonical task uses
+that record-verified identifier as its concise title. Preserve an explicit
+user-chosen title; otherwise replace a generic, inaccurate, or agent-invented
+descriptive title. Verify that the displayed title still identifies the same
+case without requiring character-for-character equality.
 Treat harmless host normalization, including whitespace normalization, as
 success. If renaming is unavailable or fails, explain exactly what happened and
 continue when the case association remains unambiguous.
@@ -125,11 +128,10 @@ or open their contents before confirmation. Preserve every existing convention,
 including the 0.2.2 `Source/`, `Record/`, `Work/`, and `Output/` layout, without
 switching, renaming, or migrating it.
 
-If no existing folder is selected, choose one concise, filesystem-safe leaf
-from the legal identity established by the authenticated case material. Use
-Arabic by default regardless of conversation language; use English only when
-explicitly requested before the first save. Do not guess or translate party
-names.
+If no existing folder is selected, use the same record-verified appeal
+identifier as the concise, filesystem-safe leaf. Use Arabic by default
+regardless of conversation language; use English only when explicitly
+requested before the first save. Do not guess or translate party names.
 
 For either an existing or new destination, before opening the local folder or
 making the first local save, show the exact full case folder and ask exactly:

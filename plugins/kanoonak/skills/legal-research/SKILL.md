@@ -12,8 +12,9 @@ exemplars, or draft a ruling.
 
 Before the first Kanoonak tool call in a session, apply
 [the package startup compatibility check](../labor-appellate-casework/SKILL.md#startup-compatibility)
-without activating the casework lifecycle. Do not duplicate or replace that
-check here.
+without activating the casework lifecycle, including its rule for a
+subscription-required tool result. Do not duplicate or replace that check
+here.
 
 ## Method
 

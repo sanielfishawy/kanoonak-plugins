@@ -21,6 +21,12 @@ again. If it still does not match, report the expected and detected values as
 a Kanoonak release/update problem and stop. Do not substitute a per-call
 version check or another compatibility system.
 
+If any Kanoonak tool returns a subscription-required result, show its message
+text to the user exactly as returned, including its kanoonak.com/account link,
+and stop the affected work.
+Do not paraphrase it, add a reason or a price, or retry the call; work that
+needs no Kanoonak tool continues normally.
+
 The independently usable research skill points to this section when it starts
 a Kanoonak session; that does not activate the casework lifecycle.
 
