@@ -5,6 +5,10 @@ single authority for output names, archiving, exact Word formatting, and file
 verification. The local-record reference alone owns parent proof and first-save
 confirmation.
 
+For Kanoonak rulings, follow this reference whenever its content, formatting,
+or verification requirements differ from generic document-authoring
+instructions.
+
 ## Deliver each draft
 
 Keep every initial or revised ruling visible in chat. When its verified local
@@ -42,7 +46,7 @@ unpadded day/month/four-digit-year form such as `7/6/2026`. DOCX creation never
 normalizes, trims, rewrites, or silently repairs the ruling. Correct the draft
 first, recreate the current file, and verify its extracted text.
 
-Use the host Documents capability, not client-side Python. Do not place
+Use the host Documents capability to create and verify the DOCX. Do not place
 research notes, case material, status messages, Markdown bold markers, or file
 delivery commentary inside the ruling.
 
@@ -85,13 +89,14 @@ the exact substantive opening phrase; they do not override the fixed opening
 title-block and procedural roles. Do not create a fixed template, module bank,
 paragraph classifier, or formatting heuristic.
 
-## Verify before reporting success
+## Verify before delivery
 
-Before delivery, use the host's available document capabilities to check that
-the saved DOCX is editable, complete, text-exact, and follows the formatting
-rules above. Correct any defect those checks reveal. Report only the checks
-actually completed; do not delay delivery to pursue verification the host does
-not provide.
+Before delivery, use the host Documents capability to verify that the saved
+DOCX is editable, complete, text-exact, and complies with every fixed
+formatting requirement above. Check each requirement in a way that can actually
+confirm it; a document can look correct while its Word formatting is wrong.
+Correct any defect found. Do not delay delivery to pursue verification the host
+does not provide.
 
 ## Open and link only the verified current ruling
 
@@ -102,11 +107,11 @@ standard Markdown link whose target is its exact absolute local path:
 - Arabic default label: `افتح الحكم في Word`.
 - Explicit-English label: `Open the ruling in Word`.
 
-Never link or report success for a placeholder, stale, missing, or unchecked
-file. If the checked file exists but opening the pane fails, preserve it,
-provide its current link, and report only the pane failure. The link exposes the
-local file; the operating system's configured file handler—not the plugin—
-determines which installed application opens it.
+Never link a placeholder, stale, missing, or unchecked file. If the checked
+file exists but opening the pane fails, preserve it, provide its current link,
+and report only the pane failure. The link exposes the local file; the operating
+system's configured file handler—not the plugin—determines which installed
+application opens it.
 
 For a revision, first archive the prior current ruling under the rules above.
 Then recreate and verify the revision at the same current path. Refresh or
