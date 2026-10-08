@@ -21,9 +21,10 @@ again. If it still does not match, report the expected and detected values as
 a Kanoonak release/update problem and stop. Do not substitute a per-call
 version check or another compatibility system.
 
-If any Kanoonak tool returns a subscription-required result, show its message
-text to the user exactly as returned, including its kanoonak.com/account link,
-and stop the affected work.
+If any Kanoonak tool returns a subscription-required result, its message text
+carries the same message in English and in Arabic. Show only the version in the
+language the user is writing in, exactly as returned, including its
+kanoonak.com/account link on its own line, and stop the affected work.
 Do not paraphrase it, add a reason or a price, or retry the call; work that
 needs no Kanoonak tool continues normally.
 
