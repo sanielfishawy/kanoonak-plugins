@@ -61,9 +61,13 @@ the completed stage and only the next incomplete prompt is offered.
 
 ## Nine stages
 
-Advance only as far as the request requires. A preparation or inspection
-request may stop during Stage 1. A drafting or revision request must first
-refresh or complete Stage 1, then complete every required downstream stage.
+Do not go beyond the stage needed to fulfill the judge's request, and do not
+skip any unfinished prerequisite stage. When the judge selects an outcome or
+asks for a ruling or revision—even after a long discussion—return to this
+workflow before continuing. Check the saved case files to see which stages are
+complete. Start with the earliest stage that is unfinished or needs to be
+repeated because of new material or the requested change, and reread the
+instructions for every stage you perform instead of relying on memory.
 
 1. **Prepare and understand the case.** After the case is selected and the
    first prompt is accepted, follow
