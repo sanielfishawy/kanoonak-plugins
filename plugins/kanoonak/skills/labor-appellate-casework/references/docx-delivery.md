@@ -41,8 +41,8 @@ was created.
 ## Preserve exact text
 
 The DOCX contains only the ruling. Preserve its exact wording, paragraph
-boundaries, visible placeholders, Western digits U+0030–U+0039, and dates in
-unpadded day/month/four-digit-year form such as `7/6/2026`. DOCX creation never
+boundaries, visible placeholders, Arabic-Indic digits U+0660–U+0669, and dates in
+unpadded day/month/four-digit-year form such as `٧/٦/٢٠٢٦`. DOCX creation never
 normalizes, trims, rewrites, or silently repairs the ruling. Correct the draft
 first, recreate the current file, and verify its extracted text.
 

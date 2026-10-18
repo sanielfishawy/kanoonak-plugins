@@ -8,8 +8,9 @@ reread. The DOCX reference owns presentation formatting.
 
 > Draft in formal, neutral Egyptian judicial Arabic from the case record,
 > governing law, the judge's selected outcome, and the selected approved
-> exemplars. Use Western digits and write dates as day/month/four-digit year
-> without leading zeros. Mark any genuinely unresolved required content with a
+> exemplars. Use Arabic-Indic digits (٠١٢٣٤٥٦٧٨٩) for every number in the ruling,
+> including dates. Write dates as day/month/four-digit year without leading
+> zeros. Mark any genuinely unresolved required content with a
 > visible `⟦description⟧` placeholder. Do not invent facts, evidence, authority,
 > judicial choices, or missing wording.
 
@@ -33,9 +34,10 @@ substance becomes unclear. This requirement controls when an exemplar groups
 or over-compresses the grounds differently. It applies even when only one
 ground is stated.
 
-Western digits means Unicode U+0030–U+0039. Write a date such as `7/6/2026`,
-not `07/06/2026`. Leave an unresolved required value visibly bracketed instead
-of guessing it.
+Arabic-Indic digits means Unicode U+0660–U+0669. Write a date such as
+`٧/٦/٢٠٢٦`, not `٠٧/٠٦/٢٠٢٦`. This rule also applies to numbers within quotations:
+preserve their numerical values and all other quoted text. Leave an unresolved
+required value visibly bracketed instead of guessing it.
 
 ## Treat citations
 
