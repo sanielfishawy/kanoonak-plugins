@@ -1,17 +1,17 @@
 ---
 name: legal-research
-description: Research Egyptian labor legislation and Court of Cassation authority through Kanoonak, either independently or for a labor-appellate case. Use for direct or indirect requests to find, read, assess, and cite governing legal sources; do not use to prepare case evidence, choose a judicial outcome, advocate for a party, or draft and deliver a ruling.
+description: Research Egyptian legislation and Court of Cassation authority through Kanoonak, either independently or for an appellate case. Use for direct or indirect requests to find, read, assess, and cite governing legal sources; do not use to prepare case evidence, choose a judicial outcome, advocate for a party, or draft and deliver a ruling.
 ---
 
 # Egyptian legal research
 
 Use this skill independently for a legal-research request or at Stage 2 of the
-labor-appellate casework lifecycle. It owns legal-source research only; it does
+appellate casework lifecycle. It owns legal-source research only; it does
 not select a case, prepare evidence, choose an outcome, select judicial
 exemplars, or draft a ruling.
 
 Before the first Kanoonak tool call in a session, apply
-[the package startup compatibility check](../labor-appellate-casework/SKILL.md#startup-compatibility)
+[the package startup compatibility check](../appellate-casework/SKILL.md#startup-compatibility)
 without activating the casework lifecycle, including its rule for a
 subscription-required tool result. Do not duplicate or replace that check
 here.
@@ -33,7 +33,7 @@ here.
    position or a search result into law.
 5. When research belongs to a prepared case, record the useful holdings,
    citations, and their application in the research file established by
-   [the local-case-record rules](../labor-appellate-casework/references/local-case-record.md).
+   [the local-case-record rules](../appellate-casework/references/local-case-record.md).
    For an independent request, return the same source-grounded analysis in the
    form the user requested.
 

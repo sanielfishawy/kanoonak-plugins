@@ -1,6 +1,8 @@
 # Kanoonak
 
-Kanoonak adds one authenticated Egyptian labor-appellate casework lifecycle and one independently usable Egyptian legal-research skill to your AI app. They use your own private Kanoonak account through the stable remote service at https://mcp.kanoonak.com/mcp.
+Kanoonak adds one authenticated appellate casework lifecycle for Egyptian labor and Economic Court appeals and one independently usable Egyptian legal-research skill to your AI app. They use your own private Kanoonak account through the stable remote service at https://mcp.kanoonak.com/mcp.
+
+Economic casework requires its separate approved exemplar-selection tool before drafting.
 
 ## Install
 
@@ -8,7 +10,7 @@ Kanoonak adds one authenticated Egyptian labor-appellate casework lifecycle and 
 2. Set **Git ref** to `main`, leave **Sparse paths** empty, and add the marketplace.
 3. Install **Kanoonak** and complete Kanoonak sign-in when prompted. If sign-in is cancelled, retry it from the installed connection; repository access alone does not grant access to any case.
 4. Fully quit and reopen Codex, then open a fresh task.
-5. Confirm that exactly two Kanoonak skills—`labor-appellate-casework` and `legal-research`—and one `kanoonak` MCP connection are available.
+5. Confirm that exactly two Kanoonak skills—`appellate-casework` and `legal-research`—and one `kanoonak` MCP connection are available.
 6. For the installation check, invoke only `kanoonak_ping`. Do not open or upload a real case.
 
 If **Add marketplace** reports `program not found` while cloning, Codex could not find Git. Install Git for Windows, fully quit and reopen Codex, and retry the same Plugins UI steps. A GitHub account is not required for this public marketplace.

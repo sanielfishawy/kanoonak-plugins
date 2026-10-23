@@ -1,0 +1,4 @@
+interface:
+  display_name: "Appellate Casework"
+  short_description: "Prepare Egyptian labor and Economic Court appeals"
+  default_prompt: "Use $appellate-casework to prepare this appeal and draft its ruling."

@@ -1,11 +1,11 @@
 ---
-name: labor-appellate-casework
-description: Prepare, research, draft, review, and deliver Egyptian labor-appellate rulings for an authenticated judge through one Kanoonak case lifecycle. Use for direct or indirect requests to inspect or prepare a captured labor appeal, explain its available outcomes, or draft or revise its ruling; do not use for advocacy, generic legal research, unrelated drafting, post-judgment interpretation, or work outside Egyptian labor appeals.
+name: appellate-casework
+description: Prepare, research, draft, review, and deliver Egyptian labor and Economic Court appellate rulings for an authenticated judge through one Kanoonak case lifecycle. Use for direct or indirect requests to inspect or prepare a captured appeal, explain its available outcomes, or draft or revise its ruling; do not use for advocacy, generic legal research, unrelated drafting, post-judgment interpretation, or work outside Egyptian labor and Economic Court appeals.
 ---
 
-# Labor-appellate casework
+# Appellate casework
 
-Assist the authenticated labor-appellate judge through one case from source
+Assist the authenticated judge through one case from source
 preparation to an editable ruling. The judge alone chooses the judicial outcome
 and alone approves, signs, or issues the ruling. Preparation, research,
 explanation, exemplar selection, drafting, review, and file creation never
@@ -105,9 +105,10 @@ instructions for every stage you perform instead of relying on memory.
    prompt. Record it in the decision file established under the local-record
    rules. An unclear answer, document, party, retrieved source, exemplar, or
    model inference never selects an outcome or authorizes ruling preparation.
-5. **Select exemplars.** Read [exemplars.md](references/exemplars.md). Read the
-   complete approved index, open the selected approved rulings in full, verify
-   their identities, and record the selections.
+5. **Select exemplars.** Read [exemplars.md](references/exemplars.md). Use the
+   approved exemplar collection for the judge’s chosen workflow, open the
+   selected approved rulings in full, verify their identities, and record the
+   selections.
 6. **Draft.** Read
    [drafting-and-review.md](references/drafting-and-review.md). Draft only from
    the prepared record, reviewed law, the judge's current choice, and the

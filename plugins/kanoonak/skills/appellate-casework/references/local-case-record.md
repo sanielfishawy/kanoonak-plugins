@@ -109,6 +109,11 @@ nothing, and prepare no case brief. Explain the specific gap and ask for the
 identifying or clarifying material needed. When new material arrives, resume
 the same authenticated case and canonical context.
 
+Use the case papers to propose a workflow. The judge’s registered role is
+background information; do not use it to select or restrict the workflow. If the
+intended workflow is unclear, ask the judge. Follow the judge’s explicit choice
+of a supported workflow.
+
 The Capture name identifies the uploaded case but is not evidence of its legal
 identity. Establish the identity from authenticated case material. When that
 material verifies an appeal number and judicial year, use that verified appeal
@@ -140,14 +145,37 @@ identifier as the concise, filesystem-safe leaf. Use Arabic by default
 regardless of conversation language; use English only when explicitly
 requested before the first save. Do not guess or translate party names.
 
-For either an existing or new destination, before opening the local folder or
-making the first local save, show the exact full case folder and ask exactly:
-> Save this case here?
+For an existing or new destination, before opening the local folder or making
+the first local save, show the exact full case-folder path and ask in the judge’s
+language, using the proposed workflow:
 
-One clear affirmative answer in the current chat confirms later saves while
-the authenticated case, parent, and destination remain unchanged. A decline,
-unclear answer, case switch, parent change, or destination change means write
-nothing until the current destination is proved and confirmed again.
+> This appears to be a [labor / Economic Court] appeal. Would you like me to use that workflow and save this case here?
+
+Arabic:
+
+> تبدو هذه القضية استئنافاً [عمالياً / أمام المحكمة الاقتصادية]. هل تريد مني اتباع هذا المسار وحفظ ملفات القضية هنا؟
+
+A clear affirmative answer confirms both the workflow and permission to save.
+
+If the papers appear to conflict with the judge’s chosen workflow, briefly
+mention the discrepancy once. Do not ask the judge to confirm the workflow again.
+
+If the judge changes the workflow without approving the save, ask only whether
+to save in the displayed folder.
+
+Once the judge clearly approves saving this case in the folder shown, save and
+update its files there during the current chat without asking again for each
+update. If the judge declines the save or gives an unclear answer to the save
+question, write nothing until the judge clearly approves. If the case, main
+cases folder or case folder changes, verify and show the save location and ask
+for permission again.
+
+Record the judge’s chosen workflow in the brief and reuse it when resuming the
+case without repeating the first-save question. For an existing labor case
+whose brief does not name the workflow, continue its established labor
+workflow. Add the workflow at the brief’s next useful update; do not migrate
+files or repeat confirmation just because that entry is missing. Change the
+recorded workflow only on the judge’s explicit instruction.
 
 ## Maintain and present the record
 

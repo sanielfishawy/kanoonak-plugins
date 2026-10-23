@@ -1,4 +1,4 @@
 interface:
   display_name: "Egyptian Legal Research"
-  short_description: "Research Egyptian labor and Cassation law"
-  default_prompt: "Use $legal-research to research this Egyptian labor-law question and cite the governing sources."
+  short_description: "Research Egyptian legislation and Cassation law"
+  default_prompt: "Use $legal-research to research this Egyptian legal question and cite the governing sources."
