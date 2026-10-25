@@ -39,6 +39,31 @@ Arabic-Indic digits means Unicode U+0660–U+0669. Write a date such as
 preserve their numerical values and all other quoted text. Leave an unresolved
 required value visibly bracketed instead of guessing it.
 
+## Refer to parties
+
+An individual party is a human being—a natural person. An entity party is a legal person, such as a company or public authority. Identify the actual party from the case record, distinguishing an entity from its representative.
+
+Throughout the ruling, refer to individual parties by their actual procedural roles in the relevant proceeding rather than by personal names. Entity parties may be referred to by their verified names or procedural roles.
+
+The following table provides common reference terms:
+
+| English | Arabic |
+|---|---|
+| Claimant; defendant | المدعي؛ المدعى عليه |
+| Appellant; respondent to the appeal | المستأنف؛ المستأنف ضده أو المستأنف عليه |
+| Counterclaimant; counterclaim defendant | المدعي فرعياً؛ المدعى عليه فرعياً |
+| Intervening party supporting an existing party | المتدخل انضمامياً |
+| Intervening party asserting an independent claim | المتدخل هجومياً أو اختصامياً |
+| Party brought into the proceedings; party requesting joinder | المُدخَل في الدعوى؛ طالب الإدخال |
+| Person bringing a procedural grievance; respondent | المتظلم؛ المتظلم ضده |
+| Petitioner for reopening a judgment; respondent | الملتمس؛ الملتمس ضده |
+| Party bringing a cassation challenge; respondent | الطاعن؛ المطعون ضده |
+| Person raising an execution objection; respondent | المستشكل؛ المستشكل ضده |
+
+Do not use الطالب or المطلوب ضده as generic party designations.
+
+For the contextual description “heirs of the appellants,” use ورثة المستأنفين.
+
 ## Treat citations
 
 > Use only legal authorities whose actual text was retrieved and reviewed.
