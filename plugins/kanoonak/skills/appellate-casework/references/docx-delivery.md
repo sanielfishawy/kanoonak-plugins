@@ -91,12 +91,14 @@ paragraph classifier, or formatting heuristic.
 
 ## Verify before delivery
 
-Before delivery, use the host Documents capability to verify that the saved
-DOCX is editable, complete, text-exact, and complies with every fixed
-formatting requirement above. Check each requirement in a way that can actually
-confirm it; a document can look correct while its Word formatting is wrong.
-Correct any defect found. Do not delay delivery to pursue verification the host
-does not provide.
+Check that the saved DOCX is complete, text-exact, and follows the fixed
+formatting requirements above. Correct any defects found.
+
+For visual verification, use ChatGPT’s document preview or a quiet background
+renderer when available. Never launch or control Microsoft Word or another
+foreground application for verification. If such rendering is unavailable or
+fails, skip it, carefully check the DOCX’s stored text and formatting, and
+continue delivery without delay.
 
 ## Open and link only the verified current ruling
 
