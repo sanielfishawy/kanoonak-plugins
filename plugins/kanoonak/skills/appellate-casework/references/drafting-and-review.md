@@ -18,12 +18,20 @@ The draft must implement the judge's selected outcome and clearly state what
 happens to the appealed judgment and whether its reasoning is adopted,
 supplemented, or replaced.
 
-Draft the actual structure the ruling requires. Use the selected exemplar to
-understand appropriate paragraph roles and judicial style without copying
-facts or treating it as a fixed template. Keep allegations attributed and keep
+Use the selected exemplar for judicial style and structural details not prescribed here, without copying facts or treating it as a fixed template. Keep allegations attributed and keep
 the court's findings distinct from party submissions. The judge's current
 choice controls the disposition; never infer, supplement, or silently change
 it.
+
+For final appellate rulings only, use this substantive order:
+
+1. Brief account of the facts and the parties’ claims.
+2. First-instance operative ruling.
+3. First-instance court’s reasons — a separate paragraph immediately following its operative ruling, fully and faithfully presenting that court’s stated factual and legal reasons for its disposition of each claim and material issue, ordinarily opening along the lines of «وأقام الحكم المستأنف قضاءه على سند من أن…». Keep this account expressly attributed to the first-instance court and distinct from the appellate reasoning.
+4. Grounds of appeal and the appellant’s requests.
+5. Respondent’s defense.
+6. The appellate court’s reasons and response to each ground of appeal.
+7. Appellate operative ruling.
 
 Present every distinct ground of appeal in its own numbered paragraph. For
 each ground, state with brevity that preserves its meaning the appellant's
