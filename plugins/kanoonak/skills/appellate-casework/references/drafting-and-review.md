@@ -25,12 +25,12 @@ it.
 
 For final appellate rulings only, use this substantive order:
 
-1. Brief account of the facts and the parties’ claims.
+1. Brief account of the facts, first-instance proceedings, and the parties’ claims.
 2. First-instance operative ruling.
-3. First-instance court’s reasons — a separate paragraph immediately following its operative ruling, fully and faithfully presenting that court’s stated factual and legal reasons for its disposition of each claim and material issue, ordinarily opening along the lines of «وأقام الحكم المستأنف قضاءه على سند من أن…». Keep this account expressly attributed to the first-instance court and distinct from the appellate reasoning.
-4. Grounds of appeal and the appellant’s requests.
-5. Respondent’s defense.
-6. The appellate court’s reasons and response to each ground of appeal.
+3. First-instance reasons — a separate paragraph immediately after its operative ruling, fully presenting that court’s stated factual and legal reasons for each claim and material issue, expressly attributed to that court.
+4. Grounds and relief sought in each appeal.
+5. Material appellate proceedings, any additional appellant submissions, and the respondent’s defense.
+6. Appellate reasoning: procedural issues and scope; responses to each appeal ground and material defense; costs and attorney fees.
 7. Appellate operative ruling.
 
 Present every distinct ground of appeal in its own numbered paragraph. For
