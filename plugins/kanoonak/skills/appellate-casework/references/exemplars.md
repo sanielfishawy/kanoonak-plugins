@@ -9,8 +9,15 @@ summary index before selecting exemplars. Select the closest appropriate
 approved exemplar or exemplars for the material situation, chosen outcome, and useful drafting
 role, respecting every caution in the collection.
 
-For the economic workflow, use its separate economic exemplar-selection
-tool to retrieve approved exemplars. If that tool or its approved collection
+For the economic workflow, call `find_economic_exemplars` for the exact subject,
+procedural matter and judge-chosen outcome, using the existing category IDs in
+its tool schema. If the category mapping is ambiguous, ask a focused question;
+never choose an outcome because an exemplar is available. Retrieve separate
+matches for multiple material issues when needed. Call `get_economic_exemplar`
+for each chosen returned exemplar and follow its complete-reading contract.
+Verify identity and retain its cautions. A valid combination returning no match
+must be explained; stop before exemplar-dependent drafting and never silently
+substitute another category. If either tool or its approved collection
 is unavailable, stop before drafting and explain what is unavailable. Never
 substitute the labor collection or treat classified economic candidates as
 approved exemplars. The tool contract owns taxonomy and lookup mechanics;
