@@ -9,15 +9,21 @@ summary index before selecting exemplars. Select the closest appropriate
 approved exemplar or exemplars for the material situation, chosen outcome, and useful drafting
 role, respecting every caution in the collection.
 
-For the economic workflow, call `find_economic_exemplars` for the exact subject,
-procedural matter and judge-chosen outcome, using the existing category IDs in
-its tool schema. If the category mapping is ambiguous, ask a focused question;
-never choose an outcome because an exemplar is available. Retrieve separate
-matches for multiple material issues when needed. Call `get_economic_exemplar`
-for each chosen returned exemplar and follow its complete-reading contract.
-Verify identity and retain its cautions. A valid combination returning no match
-must be explained; stop before exemplar-dependent drafting and never silently
-substitute another category. If either tool or its approved collection
+For the economic workflow, call `find_economic_exemplars` in one call per material
+decision with the actual proceeding stage, procedural matter and judge-chosen
+outcome, using the existing IDs in its tool schema. Stage follows the proceeding,
+not the circuit name. If the mapping is ambiguous, ask a focused question;
+never choose an outcome because an exemplar is available. The tool returns all
+approved matches across subjects, each ruling once with its matching subject
+labels. Do not supply a subject or repeat the same decision search by subject.
+Use those labels and retained cautions to select structurally suitable examples;
+cross-subject structure does not make substantive law or special procedures
+interchangeable. Separate material decisions may need separate calls.
+Call `get_economic_exemplar` for each chosen returned exemplar with its exact ID
+and collection ID and follow its complete-reading contract. Verify identity and
+retain its cautions. A valid combination returning no match must be explained;
+stop before exemplar-dependent drafting and never silently substitute another
+stage, procedural matter or outcome. If either tool or its approved collection
 is unavailable, stop before drafting and explain what is unavailable. Never
 substitute the labor collection or treat classified economic candidates as
 approved exemplars. The tool contract owns taxonomy and lookup mechanics;
